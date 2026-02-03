@@ -4,17 +4,19 @@ import requests
 import re
 from datetime import datetime
 from tqdm import tqdm
-from diffusers import StableDiffusionXLPipeline, EulerAncestralDiscreteScheduler
-from compel import Compel, ReturnedEmbeddingsType # Nueva pieza del motor
+from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler
+from compel import Compel, ReturnedEmbeddingsType
 
 class DvdEngine:
     def __init__(self, model_id="1759168"):
+        # 1. Configuración de rutas
         self.base_path = "/content/dvd-diffusion-engine"
         self.models_path = os.path.join(self.base_path, "models")
         self.outputs_path = os.path.join(self.base_path, "outputs")
         os.makedirs(self.models_path, exist_ok=True)
         os.makedirs(self.outputs_path, exist_ok=True)
 
+        # 2. Identificación y descarga
         self.model_url = f"https://civitai.com/api/download/models/{model_id}?type=Model&format=SafeTensor&size=full&fp=fp16"
         self.model_filename = self._get_remote_filename()
         self.model_local_path = os.path.join(self.models_path, self.model_filename)
@@ -22,6 +24,7 @@ class DvdEngine:
         if not os.path.exists(self.model_local_path):
             self._download_model()
 
+        # 3. Carga del Modelo
         print(f"[*] Cargando {self.model_filename} en GPU...")
         self.pipe = StableDiffusionXLPipeline.from_single_file(
             self.model_local_path,
@@ -29,12 +32,17 @@ class DvdEngine:
             use_safetensors=True,
             low_cpu_mem_usage=True
         ).to("cuda")
+
+        # --- AQUÍ VA EL SAMPLER DPM (Dentro del __init__) ---
+        self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(
+            self.pipe.scheduler.config,
+            use_karras_sigmas=True,
+            algorithm_type="sde-dpmsolver++"
+        )
         
         self.pipe.enable_attention_slicing()
-        self.pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(self.pipe.scheduler.config)
 
-        # --- INICIALIZACIÓN DE COMPEL (Modo SDXL) ---
-        # SDXL tiene dos codificadores; configuramos Compel para que hable con ambos
+        # 4. Inicialización de Compel para SDXL
         self.compel = Compel(
             tokenizer=[self.pipe.tokenizer, self.pipe.tokenizer_2],
             text_encoder=[self.pipe.text_encoder, self.pipe.text_encoder_2],
@@ -69,18 +77,12 @@ class DvdEngine:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_path = os.path.join(self.outputs_path, f"dvd_{timestamp}.png")
         
-        # --- PROCESAMIENTO DE EMBEDDINGS ---
-        # Esto rompe la barrera de los 77 tokens
-        print(f"[*] Procesando tokens extendidos...")
+        print(f"[*] Procesando tokens y renderizando con DPM++ SDE...")
         conditioning, pooled = self.compel(prompt)
         neg_conditioning, neg_pooled = self.compel(neg_prompt)
-        
-        # Balanceamos los tensores para que tengan la misma longitud
         [conditioning, neg_conditioning] = self.compel.pad_conditioning_tensors_to_same_length([conditioning, neg_conditioning])
 
-        print(f"[*] Renderizando imagen...")
         with torch.inference_mode():
-            # Pasamos los embeddings directamente en lugar del texto
             image = self.pipe(
                 prompt_embeds=conditioning,
                 pooled_prompt_embeds=pooled,
