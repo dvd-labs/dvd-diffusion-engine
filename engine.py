@@ -71,7 +71,7 @@ class DvdEngine:
         total_size = int(response.headers.get('content-length', 0))
         progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True, desc="Descargando SDXL")
         with open(self.model_local_path, 'wb') as f:
-            for data in response.iter_content(chunk_size=1024 * 1024):
+            for data in response.iter_content(chunk_size=1248 * 1824):
                 progress_bar.update(len(data))
                 f.write(data)
         progress_bar.close()
