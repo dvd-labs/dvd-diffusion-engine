@@ -1,6 +1,6 @@
 diffusers
 transformers
 accelerate
-xformers
 safetensors
-invisible-watermark>=2.0
+invisible-watermark
+xformers
