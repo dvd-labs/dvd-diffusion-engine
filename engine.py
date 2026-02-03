@@ -39,14 +39,21 @@ class DvdEngine:
         self.pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(self.pipe.scheduler.config)
 
     def _get_remote_filename(self):
-        # Hacemos una petición HEAD para no bajar el archivo, solo leer los encabezados
-        response = requests.head(self.model_url, allow_redirects=True)
-        cd = response.headers.get('content-disposition')
-        if cd:
-            # Extraemos el nombre que viene después de 'filename='
-            fname = re.findall('filename=(.+)', cd)
-            if len(fname) > 0:
-                return fname[0].strip('"')
+        # Usamos GET con stream=True para seguir todas las redirecciones de Civitai
+        # y capturar los headers reales sin descargar los 7GB de golpe.
+        try:
+            with requests.get(self.model_url, stream=True, allow_redirects=True) as r:
+                cd = r.headers.get('content-disposition')
+                if cd:
+                    # Esta regex es más robusta para capturar nombres con caracteres especiales
+                    fname = re.findall('filename\*?=(?:utf-8\'\')?(.+)', cd)
+                    if len(fname) > 0:
+                        # Limpiamos comillas, espacios y puntos y coma
+                        final_name = fname[0].strip('"; ')
+                        return final_name
+        except Exception as e:
+            print(f"[!] Error técnico al identificar el nombre: {e}")
+            
         return "model_desconocido.safetensors"
 
     def _download_model(self):
