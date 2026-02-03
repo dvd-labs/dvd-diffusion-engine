@@ -1,8 +1,5 @@
---extra-index-url https://download.pytorch.org/whl/cu121
 diffusers
 transformers
 accelerate
 safetensors
 invisible-watermark
-# Instalamos xformers compatible con lo que Colab ya tiene
-xformers==0.0.30
