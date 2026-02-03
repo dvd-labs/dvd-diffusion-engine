@@ -2,27 +2,35 @@ import torch
 import os
 import requests
 import re
+import json
 from datetime import datetime
 from tqdm import tqdm
-from PIL import PngImagePlugin # Para los metadatos
+from PIL import Image, PngImagePlugin
+from io import BytesIO
 from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler
 from compel import Compel, ReturnedEmbeddingsType
 
 class DvdEngine:
-    def __init__(self, model_id="1759168"):
+    def __init__(self, model_id="1759168", api_token=None):
+        # 1. Configuración de rutas
         self.base_path = "/content/dvd-diffusion-engine"
         self.models_path = os.path.join(self.base_path, "models")
         self.outputs_path = os.path.join(self.base_path, "outputs")
         os.makedirs(self.models_path, exist_ok=True)
         os.makedirs(self.outputs_path, exist_ok=True)
 
-        self.model_url = f"https://civitai.com/api/download/models/{model_id}?type=Model&format=SafeTensor&size=full&fp=fp16"
+        # 2. Construcción de la URL con Token
+        self.model_url = f"https://civitai.com/api/download/models/{model_id}?type=Model&format=SafeTensor"
+        if api_token:
+            self.model_url += f"&token={api_token}"
+        
         self.model_filename = self._get_remote_filename()
         self.model_local_path = os.path.join(self.models_path, self.model_filename)
 
         if not os.path.exists(self.model_local_path):
             self._download_model()
 
+        # 3. Carga del Modelo
         print(f"[*] Cargando {self.model_filename} en GPU...")
         self.pipe = StableDiffusionXLPipeline.from_single_file(
             self.model_local_path,
@@ -57,11 +65,11 @@ class DvdEngine:
                     if len(fname) > 0:
                         return fname[0].strip('"; ')
         except Exception as e:
-            print(f"[!] Error al identificar el nombre: {e}")
-        return "model_desconocido.safetensors"
+            print(f"[!] Error al identificar el nombre (revisa tu token): {e}")
+        return "modelo_civitai.safetensors"
 
     def _download_model(self):
-        print(f"[!] Iniciando descarga: {self.model_filename}")
+        print(f"[!] Iniciando descarga segura: {self.model_filename}")
         response = requests.get(self.model_url, stream=True)
         total_size = int(response.headers.get('content-length', 0))
         progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True, desc="Descargando SDXL")
@@ -75,7 +83,6 @@ class DvdEngine:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_path = os.path.join(self.outputs_path, f"dvd_{timestamp}.png")
         
-        # Gestión de Seed (Semilla)
         if seed is None:
             seed = torch.randint(0, 2**32, (1,)).item()
         
@@ -100,7 +107,6 @@ class DvdEngine:
                 generator=generator
             ).images[0]
             
-        # --- ESCRITURA DE METADATOS ---
         metadata = PngImagePlugin.PngInfo()
         metadata.add_text("Prompt", prompt)
         metadata.add_text("Negative Prompt", neg_prompt)
@@ -108,8 +114,7 @@ class DvdEngine:
         metadata.add_text("Model", self.model_filename)
         metadata.add_text("CFG scale", str(cfg))
         metadata.add_text("Steps", str(steps))
-        metadata.add_text("Sampler", "DPM++ SDE Karras")
         
         image.save(save_path, pnginfo=metadata)
-        print(f"[+] Resultado guardado con metadatos: {save_path}")
+        print(f"[+] Guardado con metadatos: {save_path}")
         return image
