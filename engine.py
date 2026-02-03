@@ -21,14 +21,13 @@ class DvdEngine:
         self.model_local_path = os.path.join(self.models_path, self.model_filename)
         if not os.path.exists(self.model_local_path): self._download_model()
 
-        print(f"[*] Cargando {self.model_filename} con FreeU...")
+        print(f"[*] Cargando {self.model_filename} con FreeU calibrado...")
         self.pipe = StableDiffusionXLPipeline.from_single_file(
             self.model_local_path, torch_dtype=torch.float16, use_safetensors=True
         ).to("cuda")
 
-        # --- MEJORAS FOOOCUS ---
-        # 1. Activar FreeU (Mejora contraste y estructura de fondo)
-        self.pipe.enable_freeu(s1=0.9, s2=0.2, b1=1.2, b2=1.4) 
+        # VALORES CALIBRADOS SEGÚN TU FOOOCUS
+        self.pipe.enable_freeu(s1=0.99, s2=0.95, b1=1.01, b2=1.02) 
         
         self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(
             self.pipe.scheduler.config, use_karras_sigmas=True, algorithm_type="sde-dpmsolver++"
@@ -72,39 +71,30 @@ class DvdEngine:
         omega = torch.acos(dot); so = torch.sin(omega)
         return (torch.sin((1.0 - t) * omega) / so) * v0 + (torch.sin(t * omega) / so) * v1
 
-    def generar(self, prompt, neg_prompt="low quality, blurry, distorted, canvas", steps=15, width=1024, height=1024, cfg=7.5, seed=None, var_seed=None, var_strength=0.0):
+    def generar(self, prompt, neg_prompt="low quality", steps=15, width=1024, height=1024, cfg=7.5, seed=None, var_seed=None, var_strength=0.0):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_path = os.path.join(self.outputs_path, f"dvd_{timestamp}.png")
-        
         if seed is None: seed = torch.randint(0, 2**32, (1,)).item()
-        
         generator = torch.Generator(device="cuda").manual_seed(seed)
         shape = (1, self.pipe.unet.config.in_channels, height // 8, width // 8)
         latents = torch.randn(shape, generator=generator, device="cuda", dtype=torch.float16)
-
         if var_strength > 0 and var_seed is not None:
             var_generator = torch.Generator(device="cuda").manual_seed(var_seed)
             var_latents = torch.randn(shape, generator=var_generator, device="cuda", dtype=torch.float16)
             latents = self.slerp(latents, var_latents, var_strength)
-
-        # 2. CLIP Skip = 2 (Mejora la interpretación de prompts de estilo)
         conditioning, pooled = self.compel(prompt)
         neg_conditioning, neg_pooled = self.compel(neg_prompt)
         [conditioning, neg_conditioning] = self.compel.pad_conditioning_tensors_to_same_length([conditioning, neg_conditioning])
-
         with torch.inference_mode():
             image = self.pipe(
                 prompt_embeds=conditioning, pooled_prompt_embeds=pooled,
                 negative_prompt_embeds=neg_conditioning, negative_pooled_prompt_embeds=neg_pooled,
                 num_inference_steps=steps, guidance_scale=cfg,
-                width=width, height=height, latents=latents,
-                clip_skip=2 
+                width=width, height=height, latents=latents, clip_skip=2 
             ).images[0]
-            
         metadata = PngImagePlugin.PngInfo()
         metadata.add_text("Prompt", prompt); metadata.add_text("Negative Prompt", neg_prompt)
         metadata.add_text("Seed", str(seed)); metadata.add_text("CFG scale", str(cfg))
-        metadata.add_text("Steps", str(steps)); metadata.add_text("FreeU", "Enabled")
-        
+        metadata.add_text("Steps", str(steps))
         image.save(save_path, pnginfo=metadata)
         return image
