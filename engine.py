@@ -40,7 +40,10 @@ class DvdEngine:
             algorithm_type="sde-dpmsolver++"
         )
         
+        # Optimizaciones de memoria (Cruciales para evitar el crash)
         self.pipe.enable_attention_slicing()
+        self.pipe.enable_vae_tiling()  # <--- ESTA SALVA TU SESIÓN
+        self.pipe.enable_vae_slicing() # <--- ESTA REFUERZA LA SEGURIDAD
 
         # 4. Inicialización de Compel para SDXL
         self.compel = Compel(
