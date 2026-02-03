@@ -6,3 +6,4 @@ invisible-watermark
 omegaconf
 pytorch-lightning
 tqdm
+compel
