@@ -3,3 +3,5 @@ transformers
 accelerate
 safetensors
 invisible-watermark
+omegaconf
+pytorch-lightning
