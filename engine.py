@@ -46,7 +46,7 @@ class DvdEngine:
             with requests.get(self.model_url, stream=True, allow_redirects=True) as r:
                 cd = r.headers.get('content-disposition')
                 if cd:
-                    fname = re.findall('filename\*?=(?:utf-8\'\')?(.+)', cd)
+                    fname = re.findall(r'filename\*?=(?:utf-8\'\')?(.+)', cd)
                     if len(fname) > 0:
                         return fname[0].strip('"; ')
         except Exception as e:
