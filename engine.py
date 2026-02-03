@@ -5,31 +5,23 @@ import re
 from datetime import datetime
 from tqdm import tqdm
 from diffusers import StableDiffusionXLPipeline, EulerAncestralDiscreteScheduler
+from compel import Compel, ReturnedEmbeddingsType # Nueva pieza del motor
 
 class DvdEngine:
     def __init__(self, model_id="1759168"):
-        # 1. Rutas Operativas
         self.base_path = "/content/dvd-diffusion-engine"
         self.models_path = os.path.join(self.base_path, "models")
         self.outputs_path = os.path.join(self.base_path, "outputs")
         os.makedirs(self.models_path, exist_ok=True)
         os.makedirs(self.outputs_path, exist_ok=True)
 
-        # 2. Configuración Dinámica de URL
         self.model_url = f"https://civitai.com/api/download/models/{model_id}?type=Model&format=SafeTensor&size=full&fp=fp16"
-
-        # 3. Identificación del Modelo (Tu nueva lógica)
-        print(f"[*] Identificando modelo para ID: {model_id}...")
         self.model_filename = self._get_remote_filename()
         self.model_local_path = os.path.join(self.models_path, self.model_filename)
 
-        # 4. Gestión de Descarga
         if not os.path.exists(self.model_local_path):
             self._download_model()
-        else:
-            print(f"[+] Modelo ya existe en disco: {self.model_filename}")
 
-        # 5. Carga en VRAM (Modo High VRAM para T4)
         print(f"[*] Cargando {self.model_filename} en GPU...")
         self.pipe = StableDiffusionXLPipeline.from_single_file(
             self.model_local_path,
@@ -40,6 +32,15 @@ class DvdEngine:
         
         self.pipe.enable_attention_slicing()
         self.pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(self.pipe.scheduler.config)
+
+        # --- INICIALIZACIÓN DE COMPEL (Modo SDXL) ---
+        # SDXL tiene dos codificadores; configuramos Compel para que hable con ambos
+        self.compel = Compel(
+            tokenizer=[self.pipe.tokenizer, self.pipe.tokenizer_2],
+            text_encoder=[self.pipe.text_encoder, self.pipe.text_encoder_2],
+            returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED,
+            requires_pooled=[False, True]
+        )
 
     def _get_remote_filename(self):
         try:
@@ -57,25 +58,34 @@ class DvdEngine:
         print(f"[!] Iniciando descarga: {self.model_filename}")
         response = requests.get(self.model_url, stream=True)
         total_size = int(response.headers.get('content-length', 0))
-        
         progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True, desc="Descargando SDXL")
-        
         with open(self.model_local_path, 'wb') as f:
             for data in response.iter_content(chunk_size=1024 * 1024):
                 progress_bar.update(len(data))
                 f.write(data)
         progress_bar.close()
-        print(f"[+] Descarga completada: {self.model_local_path}")
 
     def generar(self, prompt, neg_prompt="low quality, blurry, distorted, canvas", steps=30):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_path = os.path.join(self.outputs_path, f"dvd_{timestamp}.png")
         
-        print(f"[*] Renderizando: {prompt}")
+        # --- PROCESAMIENTO DE EMBEDDINGS ---
+        # Esto rompe la barrera de los 77 tokens
+        print(f"[*] Procesando tokens extendidos...")
+        conditioning, pooled = self.compel(prompt)
+        neg_conditioning, neg_pooled = self.compel(neg_prompt)
+        
+        # Balanceamos los tensores para que tengan la misma longitud
+        [conditioning, neg_conditioning] = self.compel.pad_conditioning_tensors_to_same_length([conditioning, neg_conditioning])
+
+        print(f"[*] Renderizando imagen...")
         with torch.inference_mode():
+            # Pasamos los embeddings directamente en lugar del texto
             image = self.pipe(
-                prompt=prompt,
-                negative_prompt=neg_prompt,
+                prompt_embeds=conditioning,
+                pooled_prompt_embeds=pooled,
+                negative_prompt_embeds=neg_conditioning,
+                negative_pooled_prompt_embeds=neg_pooled,
                 num_inference_steps=steps,
                 guidance_scale=7.5
             ).images[0]
