@@ -92,7 +92,7 @@ class DvdEngine:
                 negative_prompt_embeds=neg_conditioning,
                 negative_pooled_prompt_embeds=neg_pooled,
                 num_inference_steps=steps,
-                guidance_scale=7.5
+                guidance_scale=3.5
             ).images[0]
             
         image.save(save_path)
