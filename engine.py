@@ -76,7 +76,7 @@ class DvdEngine:
                 f.write(data)
         progress_bar.close()
 
-    def generar(self, prompt, neg_prompt="low quality, blurry, distorted, canvas", steps=25):
+    def generar(self, prompt, neg_prompt="low quality, blurry, distorted, canvas", steps=15):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_path = os.path.join(self.outputs_path, f"dvd_{timestamp}.png")
         
