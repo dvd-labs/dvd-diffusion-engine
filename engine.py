@@ -70,17 +70,19 @@ class DvdEngine:
         response = requests.get(self.model_url, stream=True)
         total_size = int(response.headers.get('content-length', 0))
         progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True, desc="Descargando SDXL")
-        with open(self.model_local_path, 'wb') as f:
-            for data in response.iter_content(chunk_size=1248 * 1824):
+        
+            with open(self.model_local_path, 'wb') as f:
+            for data in response.iter_content(chunk_size=1024 * 1024):
                 progress_bar.update(len(data))
                 f.write(data)
         progress_bar.close()
 
-    def generar(self, prompt, neg_prompt="low quality, blurry, distorted, canvas", steps=15):
+    def generar(self, prompt, neg_prompt="low quality, blurry, distorted, canvas", steps=15, width=1024, height=1024, cfg=7.5):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_path = os.path.join(self.outputs_path, f"dvd_{timestamp}.png")
         
-        print(f"[*] Procesando tokens y renderizando con DPM++ SDE...")
+        print(f"[*] Renderizando: {width}x{height} | Pasos: {steps} | CFG: {cfg}")
+        
         conditioning, pooled = self.compel(prompt)
         neg_conditioning, neg_pooled = self.compel(neg_prompt)
         [conditioning, neg_conditioning] = self.compel.pad_conditioning_tensors_to_same_length([conditioning, neg_conditioning])
@@ -92,7 +94,9 @@ class DvdEngine:
                 negative_prompt_embeds=neg_conditioning,
                 negative_pooled_prompt_embeds=neg_pooled,
                 num_inference_steps=steps,
-                guidance_scale=3.5
+                guidance_scale=cfg, # Ahora es una variable
+                width=width,
+                height=height
             ).images[0]
             
         image.save(save_path)
