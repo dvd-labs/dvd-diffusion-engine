@@ -33,17 +33,17 @@ class DvdEngine:
             low_cpu_mem_usage=True
         ).to("cuda")
 
-        # --- AQUÍ VA EL SAMPLER DPM (Dentro del __init__) ---
+        # Sampler DPM++ SDE Karras
         self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(
             self.pipe.scheduler.config,
             use_karras_sigmas=True,
             algorithm_type="sde-dpmsolver++"
         )
         
-        # Optimizaciones de memoria (Cruciales para evitar el crash)
+        # Optimizaciones de memoria
         self.pipe.enable_attention_slicing()
-        self.pipe.enable_vae_tiling()  # <--- ESTA SALVA TU SESIÓN
-        self.pipe.enable_vae_slicing() # <--- ESTA REFUERZA LA SEGURIDAD
+        self.pipe.enable_vae_tiling()
+        self.pipe.enable_vae_slicing()
 
         # 4. Inicialización de Compel para SDXL
         self.compel = Compel(
@@ -71,7 +71,8 @@ class DvdEngine:
         total_size = int(response.headers.get('content-length', 0))
         progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True, desc="Descargando SDXL")
         
-            with open(self.model_local_path, 'wb') as f:
+        # Chunk_size corregido a 1MB (estándar operativo)
+        with open(self.model_local_path, 'wb') as f:
             for data in response.iter_content(chunk_size=1024 * 1024):
                 progress_bar.update(len(data))
                 f.write(data)
@@ -94,7 +95,7 @@ class DvdEngine:
                 negative_prompt_embeds=neg_conditioning,
                 negative_pooled_prompt_embeds=neg_pooled,
                 num_inference_steps=steps,
-                guidance_scale=cfg, # Ahora es una variable
+                guidance_scale=cfg,
                 width=width,
                 height=height
             ).images[0]
