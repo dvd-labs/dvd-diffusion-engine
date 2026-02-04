@@ -5,9 +5,13 @@ from PIL import Image, PngImagePlugin
 from io import BytesIO
 from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler
 from compel import Compel, ReturnedEmbeddingsType
+from ultralytics import YOLO
+import cv2
+import numpy as np
 
 class DvdEngine:
     def __init__(self, model_id="1759168", api_token=None):
+        self.face_detector = YOLO("https://github.com/face0ff/face-yolo/raw/main/models/face_yolov8n.pt")
         self.base_path = "/content/dvd-diffusion-engine"
         self.models_path = os.path.join(self.base_path, "models")
         self.outputs_path = os.path.join(self.base_path, "outputs")
