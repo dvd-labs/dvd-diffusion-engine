@@ -81,13 +81,13 @@ class DvdEngine:
         return (torch.sin((1.0 - t) * omega) / so) * v0 + (torch.sin(t * omega) / so) * v1
 
     def aplicar_adetailer(self, image, prompt, neg_prompt, strength=0.35):
-        import PIL.ImageOps as ImageOps
-        from PIL import ImageFilter
+        from PIL import ImageFilter, ImageOps
         
         cv_img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         results = self.face_detector(cv_img, conf=0.3)
         if not results[0].boxes: return image
 
+        # Cargamos el motor de cirugía
         img2img = StableDiffusionXLImg2ImgPipeline(
             vae=self.pipe.vae, text_encoder=self.pipe.text_encoder, 
             text_encoder_2=self.pipe.text_encoder_2, tokenizer=self.pipe.tokenizer, 
@@ -105,7 +105,7 @@ class DvdEngine:
             
             face_crop = image.crop((nx1, ny1, nx2, ny2)).resize((768, 768))
             
-            # Procesamiento con Compel
+            # Procesamiento con Compel (v6.5)
             c_ade, p_ade = self.compel(prompt)
             nc_ade, np_ade = self.compel(neg_prompt)
             [c_ade, nc_ade] = self.compel.pad_conditioning_tensors_to_same_length([c_ade, nc_ade])
@@ -117,15 +117,23 @@ class DvdEngine:
                     image=face_crop, strength=strength, guidance_scale=5.0, num_inference_steps=20
                 ).images[0]
             
-            # --- FIX DE COSTURAS: Máscara con degradado ---
             refined_face = refined_face.resize((nx2 - nx1, ny2 - ny1))
+
+            # --- CORRECCIÓN DE MÁSCARA (FEATHERING REAL) ---
+            # 1. Crear máscara negra (transparente)
             mask = Image.new("L", refined_face.size, 0)
-            # Dibujamos un área blanca con bordes suaves
-            draw_mask = Image.new("L", refined_face.size, 255)
-            mask.paste(draw_mask, (0,0))
-            mask = mask.filter(ImageFilter.GaussianBlur(radius=10)) # <--- Difumina el borde del cuadro
+            # 2. Crear un área blanca central más pequeña que el recorte
+            # Dejamos un margen de 20px para que el desenfoque tenga espacio
+            border = 20
+            inner_w, inner_h = refined_face.size[0] - (border * 2), refined_face.size[1] - (border * 2)
+            draw_mask = Image.new("L", (inner_w, inner_h), 255)
+            # 3. Pegamos el centro blanco sobre el fondo negro
+            mask.paste(draw_mask, (border, border))
+            # 4. Aplicamos un desenfoque pesado para crear el degradado
+            mask = mask.filter(ImageFilter.GaussianBlur(radius=15))
             
-            final_image.paste(refined_face, (nx1, ny1), mask) # Pegado con máscara
+            # 5. Pegado final usando la máscara de degradado
+            final_image.paste(refined_face, (nx1, ny1), mask)
             
         return final_image
         
