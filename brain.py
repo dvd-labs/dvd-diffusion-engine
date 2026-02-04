@@ -1,12 +1,11 @@
-# brain.py v7.8 (Silencio de Logs)
+# brain.py v7.9 (FULL: Silencio + Visual Prompter + Slang)
 import re
 import warnings
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, logging as transformers_logging
 import torch
 from google.colab import userdata
 
-# --- EL FILTRO DE SILENCIO ---
-# Esto apaga los avisos de "pad_token_id" de raíz
+# Apagamos la estática técnica
 transformers_logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
 
@@ -21,7 +20,6 @@ class DvdBrain:
         )
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=self.hf_token)
-        # Nos aseguramos de que el tokenizer sepa cuál es el token de relleno
         self.tokenizer.pad_token = self.tokenizer.eos_token 
         
         self.model = AutoModelForCausalLM.from_pretrained(
@@ -31,16 +29,13 @@ class DvdBrain:
         self.history = []
 
     def hablar(self, user_input, persona_prompt):
+        """Voz ruda de Jax."""
         messages = [{"role": "system", "content": persona_prompt}] + self.history + [{"role": "user", "content": user_input}]
         inputs = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt", return_dict=True).to("cuda")
         
         with torch.no_grad():
             outputs = self.model.generate(
-                **inputs, 
-                max_new_tokens=256, 
-                do_sample=True, 
-                temperature=0.8,
-                # FIX: Se lo pasamos aquí para que la librería no tenga que "adivinar" y no imprima el aviso
+                **inputs, max_new_tokens=256, do_sample=True, temperature=0.8,
                 pad_token_id=self.tokenizer.eos_token_id 
             )
         
@@ -48,3 +43,22 @@ class DvdBrain:
         self.history.append({"role": "user", "content": user_input})
         self.history.append({"role": "assistant", "content": respuesta.strip()})
         return respuesta.strip()
+
+    def generar_prompt_visual(self, user_input, jax_dna):
+        """Traductor técnico para el motor visual (SDXL)."""
+        system_instr = (
+            "You are an expert SDXL prompt engineer. "
+            f"Character DNA: {jax_dna}. "
+            "Output ONLY a detailed English prompt. No conversation. No Spanish."
+        )
+        
+        messages = [{"role": "system", "content": system_instr}, {"role": "user", "content": user_input}]
+        inputs = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt", return_dict=True).to("cuda")
+
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs, max_new_tokens=150, do_sample=False,
+                pad_token_id=self.tokenizer.eos_token_id
+            )
+        
+        return self.tokenizer.decode(outputs[0][len(inputs['input_ids'][0]):], skip_special_tokens=True).strip()
