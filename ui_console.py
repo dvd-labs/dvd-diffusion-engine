@@ -29,20 +29,42 @@ def crear_interfaz(brain, motor, vram_logic, personality, jax_dna):
         if not txt: return
         input_field.value = ""; imprimir(txt, "u")
         
-        # Lógica de Intención (Desde personality.py)
-        if personality.analizar_intencion(txt):
-            imprimir("Jax está preparando la cámara...", "ia")
-            # Usamos globals() para sacar los settings del notebook
-            prompt_visual = brain.hablar(f"Describe: {txt}. Context: {jax_dna}", "System: Visual Prompter.")
-            img = vram_logic.generar_con_intercambio(
-                brain, motor, prompt_visual, 
-                globals().get('SETTINGS', ""), globals().get('NEGATIVE_PROMPT', ""),
-                globals().get('ADETAILER', False), globals().get('DETECTOR_STRENGTH', 0.35)
-            )
-            if img: imprimir(img, "ia", es_img=True)
-        else:
-            resp = brain.hablar(txt, personality.get_system_prompt(globals().get('MODO_JAX', 'jax_dj')))
-            imprimir(resp, "ia")
+        try:
+            # 1. ¿El usuario quiere ver algo?
+            if personality.analizar_intencion(txt):
+                # A. Jax reacciona con su voz (Conversación rápida)
+                # Le pedimos algo breve para que no se suelte un discurso
+                reaccion = brain.hablar(f"Dime algo muy breve sobre que vas a tomar la foto de: {txt}", personality.get_system_prompt('jax_dj'))
+                imprimir(reaccion, "ia")
+                
+                imprimir("📸 *Jax ajustando el lente...*", "sys")
+                
+                # B. Generamos el prompt TÉCNICO (Sin que Jax hable)
+                # Aquí usamos el método nuevo que solo escupe inglés para el SDXL
+                prompt_visual = brain.generar_prompt_visual(txt, jax_dna)
+                
+                # C. Mandamos a la cámara
+                img = vram_logic.generar_con_intercambio(
+                    brain, motor, prompt_visual, 
+                    globals().get('SETTINGS', ""), globals().get('NEGATIVE_PROMPT', ""),
+                    globals().get('ADETAILER', False), globals().get('DETECTOR_STRENGTH', 0.35)
+                )
+                
+                if img: 
+                    imprimir(img, "ia", es_img=True)
+                else:
+                    imprimir("⚠️ Falló el flash, intenta de nuevo.", "sys")
+            
+            # 2. Es solo plática normal
+            else:
+                imprimir("Jax está escribiendo...", "sys")
+                modo = globals().get('MODO_JAX', 'jax_dj')
+                sys_p = personality.get_system_prompt(modo, globals().get('PROMPT_CUSTOM', ''))
+                resp = brain.hablar(txt, sys_p)
+                imprimir(resp, "ia")
+                
+        except Exception as e:
+            imprimir(f"⚠️ Error en el set: {str(e)}", "sys")
 
     # --- CONEXIONES ---
     btn_send.on_click(procesar)
