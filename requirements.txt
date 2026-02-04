@@ -7,3 +7,6 @@ omegaconf
 pytorch-lightning
 tqdm
 compel
+ultralytics
+opencv-python
+filterpy
