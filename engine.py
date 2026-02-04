@@ -81,16 +81,13 @@ class DvdEngine:
         return (torch.sin((1.0 - t) * omega) / so) * v0 + (torch.sin(t * omega) / so) * v1
 
     def aplicar_adetailer(self, image, prompt, neg_prompt, strength=0.35):
-        # 1. Detección
+        import PIL.ImageOps as ImageOps
+        from PIL import ImageFilter
+        
         cv_img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         results = self.face_detector(cv_img, conf=0.3)
-        
-        if not results[0].boxes:
-            print("[!] Adetailer: No se detectaron rostros."); return image
+        if not results[0].boxes: return image
 
-        print(f"[*] Adetailer: Perfeccionando {len(results[0].boxes)} rostro(s)...")
-        
-        # 2. Configurar motor de detalle (reutilizando la RAM de la GPU)
         img2img = StableDiffusionXLImg2ImgPipeline(
             vae=self.pipe.vae, text_encoder=self.pipe.text_encoder, 
             text_encoder_2=self.pipe.text_encoder_2, tokenizer=self.pipe.tokenizer, 
@@ -98,11 +95,8 @@ class DvdEngine:
         )
 
         final_image = image.copy()
-        
         for box in results[0].boxes.xyxy:
             x1, y1, x2, y2 = map(int, box)
-            
-            # Zoom dinámico al rostro para la corrección
             w, h = x2 - x1, y2 - y1
             cx, cy = x1 + w//2, y1 + h//2
             side = int(max(w, h) * 1.5)
@@ -111,29 +105,30 @@ class DvdEngine:
             
             face_crop = image.crop((nx1, ny1, nx2, ny2)).resize((768, 768))
             
-            # Cirugía estética digital
+            # Procesamiento con Compel
             c_ade, p_ade = self.compel(prompt)
             nc_ade, np_ade = self.compel(neg_prompt)
             [c_ade, nc_ade] = self.compel.pad_conditioning_tensors_to_same_length([c_ade, nc_ade])
             
             with torch.inference_mode():
                 refined_face = img2img(
-                    prompt_embeds=c_ade, 
-                    pooled_prompt_embeds=p_ade,
-                    negative_prompt_embeds=nc_ade, 
-                    negative_pooled_prompt_embeds=np_ade,
-                    image=face_crop, 
-                    strength=strength, 
-                    guidance_scale=5.0,
-                    num_inference_steps=20
+                    prompt_embeds=c_ade, pooled_prompt_embeds=p_ade,
+                    negative_prompt_embeds=nc_ade, negative_pooled_prompt_embeds=np_ade,
+                    image=face_crop, strength=strength, guidance_scale=5.0, num_inference_steps=20
                 ).images[0]
             
-            # Pegar de vuelta la cara perfecta
+            # --- FIX DE COSTURAS: Máscara con degradado ---
             refined_face = refined_face.resize((nx2 - nx1, ny2 - ny1))
-            final_image.paste(refined_face, (nx1, ny1))
-
+            mask = Image.new("L", refined_face.size, 0)
+            # Dibujamos un área blanca con bordes suaves
+            draw_mask = Image.new("L", refined_face.size, 255)
+            mask.paste(draw_mask, (0,0))
+            mask = mask.filter(ImageFilter.GaussianBlur(radius=10)) # <--- Difumina el borde del cuadro
+            
+            final_image.paste(refined_face, (nx1, ny1), mask) # Pegado con máscara
+            
         return final_image
-
+        
     def generar(self, prompt, neg_prompt="low quality", steps=15, width=1024, height=1024, cfg=7.5, seed=None, var_seed=None, var_strength=0.0):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_path = os.path.join(self.outputs_path, f"dvd_{timestamp}.png")
