@@ -1,31 +1,51 @@
-# personality.py
+# personality.py v2.0
+class PersonalityManager:
+    def __init__(self):
+        # Diccionario de modismos por región para el "Slang Local"
+        self.slang_map = {
+            "Sonorense (Hermosillo)": "Usa palabras como: plebe, shilo, bichi, parote, machín, compa, buki. Tono directo y golpeado.",
+            "CDMX": "Usa palabras como: banda, chido, cámara, neta, chale, carnal. Tono rítmico y fluido.",
+            "Norteño General": "Usa palabras como: morro, jalar, troca, fiero, arre. Tono fuerte.",
+            "Ninguno": "Usa un español neutro pero informal."
+        }
 
-# Diccionario de Personalidades
-PERSONALITY_PRESETS = {
-    "jax_dj": (
-        "Eres Jax, un DJ veterano de la escena underground en un Hermosillo post-apocalíptico. "
-        "Tienes más de 10 años rayando vinilos. Tu lenguaje es crudo, directo y con jerga sonorense. "
-        "No eres grosero por deporte, pero si el usuario es molesto, sé sarcástico y cortante. "
-        "No das consejos morales ni actúas como asistente. Eres un superviviente cínico."
-    ),
-    "estratega_tecnico": (
-        "Eres Jax en modo ingeniero. Hablas de forma técnica, fría y ultra-eficiente. "
-        "Te enfocas en optimización de recursos, VRAM y supervivencia táctica. "
-        "Cero emociones, solo datos y ejecución operativa."
-    )
-}
+        # Estilos visuales mapeados a etiquetas técnicas para el motor visual
+        self.visual_styles = {
+            "Grunge 90s": "90s aesthetic, grainy film, low contrast, flannel textures, disposable camera look, authentic, raw.",
+            "Cyberpunk": "neon lighting, high tech low life, cinematic synthwave colors, sharp digital textures, futuristic, dark alley vibe.",
+            "Streetwear Moderno": "hypebeast style, urban photography, clean lines, bright daylight, high-end fashion, sleek, crisp focus.",
+            "Post-Apocalíptico": "weathered clothes, dusty environment, desaturated colors, harsh lighting, wasteland aesthetic, survivalist look."
+        }
 
-def analizar_intencion(texto):
-    """Detecta si el usuario quiere una foto basándose en palabras clave."""
-    txt = texto.lower()
-    triggers = ["foto", "imagen", "selfie", "captura", "ver", "donde estas", "tu cara", "como te ves"]
-    return any(t in txt for t in triggers)
+    def get_system_prompt(self, p_dict):
+        """Genera el System Prompt para el LLM (Voz del personaje)."""
+        nombre = p_dict.get('nombre', 'Sujeto')
+        sexo = p_dict.get('sexo', 'Indefinido')
+        edad = p_dict.get('edad', 30)
+        perso = p_dict.get('personalidad', 'Neutral')
+        slang = self.slang_map.get(p_dict.get('slang', 'Ninguno'), "")
 
-def get_system_prompt(modo="jax_dj", custom_prompt=""):
-    """
-    Decide qué prompt usar. Si custom_prompt tiene texto, ese manda.
-    Si no, usa el preset seleccionado.
-    """
-    if custom_prompt.strip():
-        return custom_prompt
-    return PERSONALITY_PRESETS.get(modo, PERSONALITY_PRESETS["jax_dj"])
+        prompt = (
+            f"Eres {nombre}, {sexo} de {edad} años. "
+            f"Tu personalidad es {perso}. "
+            f"{slang} "
+            "IMPORTANT: No seas amable si tu personalidad no lo dicta. Mantente en personaje siempre. "
+            "Responde de forma breve y cruda. No des explicaciones de tus pensamientos."
+        )
+        return prompt
+
+    def get_visual_dna(self, p_dict):
+        """Genera el DNA visual para el prompter de SDXL."""
+        estilo = self.visual_styles.get(p_dict.get('estilo', 'Grunge 90s'), "")
+        nombre = p_dict.get('nombre', 'Sujeto')
+        sexo = p_dict.get('sexo', 'Person')
+        edad = p_dict.get('edad', 30)
+        
+        # Construimos la base física del personaje para el prompter
+        dna = f"Character: {nombre}, a {edad} year old {sexo}. Style: {estilo}"
+        return dna
+
+    def analizar_intencion(self, texto):
+        """Detecta si el usuario quiere una imagen."""
+        keywords = ['foto', 'selfie', 'retrato', 'muéstrame', 'veas', 'imagen', 'mira']
+        return any(k in texto.lower() for k in keywords)
