@@ -10,3 +10,8 @@ compel
 ultralytics
 opencv-python
 filterpy
+transformers>=4.40.0
+accelerate>=0.30.0
+bitsandbytes>=0.43.0
+sentencepiece
+protobuf
