@@ -1,7 +1,8 @@
-# ui_console.py v15.3 (Scroll & Status Restore)
+# ui_console.py v15.4 (Bridge to Notebook)
 import ipywidgets as widgets
 from IPython.display import display, HTML, Javascript
 import time
+import __main__ # <--- ESTE ES EL PARO: Conecta el archivo con el Notebook
 
 def crear_interfaz(brain, motor, vram_logic, personality, jax_dna):
     chat_log = widgets.Output(layout={'height': '450px', 'overflow_y': 'scroll', 'border': '1px solid #30363d', 'padding': '10px'})
@@ -14,9 +15,7 @@ def crear_interfaz(brain, motor, vram_logic, personality, jax_dna):
 
     def imprimir(cont, tipo, es_img=False):
         with chat_log:
-            # Creamos un ID único para cada burbuja para que el JS sepa a dónde ir
             mid = f"msg_{int(time.time()*1000)}"
-            
             if tipo == "u": 
                 display(HTML(f"<div id='{mid}' style='text-align:right; margin:5px;'><span style='background:#238636; color:white; padding:8px 12px; border-radius:12px; display:inline-block;'>{cont}</span></div>"))
             elif tipo == "ia":
@@ -28,55 +27,53 @@ def crear_interfaz(brain, motor, vram_logic, personality, jax_dna):
             elif tipo == "sys":
                 display(HTML(f"<div id='{mid}' style='text-align:center; font-size:11px; color:#f39c12; font-style:italic; margin:8px;'>{cont}</div>"))
             
-            # --- EL PARO DEL SCROLL ---
-            # Este JS busca el mensaje que acabamos de crear y scrollea hasta él
-            display(Javascript(f"""
-                var el = document.getElementById('{mid}');
-                if (el) {{ el.scrollIntoView({{behavior: 'smooth', block: 'nearest'}}); }}
-            """))
+            display(Javascript(f"var el=document.getElementById('{mid}'); if(el) el.scrollIntoView();"))
 
     def procesar(_=None):
         txt = input_field.value.strip()
         if not txt: return
-        input_field.value = ""
-        imprimir(txt, "u")
+        input_field.value = ""; imprimir(txt, "u")
         
         try:
+            # --- ACCESO REAL AL NOTEBOOK ---
+            # Buscamos en __main__ (el notebook) en lugar de globals() local
+            raw_set = getattr(__main__, 'SETTINGS', "steps=15, cfg=5.5")
+            neg_p = getattr(__main__, 'NEGATIVE_PROMPT', "low quality")
+            ade = getattr(__main__, 'ADETAILER', False)
+            
             if personality.analizar_intencion(txt):
-                # 1. Mensaje de estado inicial
                 imprimir("📡 Jax está preparando la cámara...", "sys")
                 
-                # Voz de Jax (Breve)
-                reaccion = brain.hablar(f"Dime algo muy breve sobre que vas a tomar la foto de: {txt}", personality.get_system_prompt('jax_dj'))
+                # Reacción rápida de Jax
+                reaccion = brain.hablar(f"Dime algo muy breve sobre: {txt}", personality.get_system_prompt('jax_dj'))
                 imprimir(reaccion, "ia")
                 
-                # 2. Mensaje de estado de generación (Es vital que aparezca antes de la carga pesada)
-                imprimir("⚡ Generando imagen (Hot-Swap VRAM activo)...", "sys")
+                imprimir(f"⚡ Generando con settings: {raw_set}", "sys")
                 
+                # Generar prompt técnico en inglés
                 prompt_visual = brain.generar_prompt_visual(txt, jax_dna)
                 
-                s_str = globals().get('SETTINGS', "steps=15, width=1024, height=1024, cfg=5.5")
-                n_p = globals().get('NEGATIVE_PROMPT', "low quality, blur")
-                ade = globals().get('ADETAILER', False)
-                ade_s = globals().get('DETECTOR_STRENGTH', 0.35)
-                
-                img = vram_logic.generar_con_intercambio(brain, motor, prompt_visual, s_str, n_p, ade, ade_s)
+                # Disparo al motor
+                img = vram_logic.generar_con_intercambio(
+                    brain, motor, prompt_visual, 
+                    raw_set, neg_p, ade, 
+                    getattr(__main__, 'DETECTOR_STRENGTH', 0.35)
+                )
                 
                 if img: imprimir(img, "ia", es_img=True)
-                else: imprimir("⚠️ Error revelando la foto.", "sys")
-            
+                else: imprimir("⚠️ Falló el revelado.", "sys")
             else:
                 imprimir("💬 Jax está escribiendo...", "sys")
-                modo = globals().get('MODO_JAX', 'jax_dj')
-                sys_p = personality.get_system_prompt(modo, globals().get('PROMPT_CUSTOM', ''))
+                modo = getattr(__main__, 'MODO_JAX', 'jax_dj')
+                sys_p = personality.get_system_prompt(modo, getattr(__main__, 'PROMPT_CUSTOM', ''))
                 resp = brain.hablar(txt, sys_p)
                 imprimir(resp, "ia")
                 
         except Exception as e:
-            imprimir(f"⚠️ ERROR EN EL SET: {str(e)}", "sys")
+            imprimir(f"⚠️ ERROR: {str(e)}", "sys")
 
     btn_send.on_click(procesar)
     input_field.on_submit(procesar)
     
     display(widgets.VBox([chat_log, widgets.HBox([input_field, btn_send, btn_gal]), gallery_output]))
-    with chat_log: imprimir("--- SISTEMA v15.3 ONLINE | SCROLL ACTIVADO ---", "sys")
+    with chat_log: imprimir("--- SISTEMA v15.4 ONLINE | BRIDGE ACTIVADO ---", "sys")
