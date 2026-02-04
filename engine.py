@@ -112,10 +112,19 @@ class DvdEngine:
             face_crop = image.crop((nx1, ny1, nx2, ny2)).resize((768, 768))
             
             # Cirugía estética digital
+            c_ade, p_ade = self.compel(prompt)
+            nc_ade, np_ade = self.compel(neg_prompt)
+            [c_ade, nc_ade] = self.compel.pad_conditioning_tensors_to_same_length([c_ade, nc_ade])
+            
             with torch.inference_mode():
                 refined_face = img2img(
-                    prompt=prompt, negative_prompt=neg_prompt,
-                    image=face_crop, strength=strength, guidance_scale=5.0,
+                    prompt_embeds=c_ade, 
+                    pooled_prompt_embeds=p_ade,
+                    negative_prompt_embeds=nc_ade, 
+                    negative_pooled_prompt_embeds=np_ade,
+                    image=face_crop, 
+                    strength=strength, 
+                    guidance_scale=5.0,
                     num_inference_steps=20
                 ).images[0]
             
