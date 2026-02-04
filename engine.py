@@ -159,4 +159,4 @@ class DvdEngine:
         meta.add_text("Prompt", prompt); meta.add_text("Negative Prompt", neg_prompt)
         meta.add_text("Seed", str(seed)); meta.add_text("CFG scale", str(cfg)); meta.add_text("Steps", str(steps))
         image.save(save_path, pnginfo=meta)
-        return image
+        return image, meta, save_path
