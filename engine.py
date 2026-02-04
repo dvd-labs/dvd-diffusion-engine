@@ -42,7 +42,7 @@ class DvdEngine:
         self.pipe.vae.enable_tiling()
         self.pipe.vae.enable_slicing()
         self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(
-            self.pipe.scheduler.config, use_karras_sigmas=True, algorithm_type="sde-dpmsolver++"
+            self.pipe.scheduler.config, use_karras_sigmas=True, algorithm_type="dpmsolver++"
         )
         self.pipe.enable_attention_slicing()
 
