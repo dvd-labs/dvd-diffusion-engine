@@ -1,7 +1,6 @@
 # brain.py v7.8 (Silencio de Logs)
 import re
 import warnings
-import logging
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, logging as transformers_logging
 import torch
 from google.colab import userdata
@@ -22,7 +21,8 @@ class DvdBrain:
         )
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=self.hf_token)
-        self.tokenizer.pad_token = self.tokenizer.eos_token # Aseguramos que el token exista
+        # Nos aseguramos de que el tokenizer sepa cuál es el token de relleno
+        self.tokenizer.pad_token = self.tokenizer.eos_token 
         
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name, quantization_config=bnb_config, 
@@ -40,15 +40,11 @@ class DvdBrain:
                 max_new_tokens=256, 
                 do_sample=True, 
                 temperature=0.8,
-                pad_token_id=self.tokenizer.eos_token_id # <-- FIX: Se lo pasamos aquí para que no se queje
+                # FIX: Se lo pasamos aquí para que la librería no tenga que "adivinar" y no imprima el aviso
+                pad_token_id=self.tokenizer.eos_token_id 
             )
         
         respuesta = self.tokenizer.decode(outputs[0][len(inputs['input_ids'][0]):], skip_special_tokens=True)
         self.history.append({"role": "user", "content": user_input})
         self.history.append({"role": "assistant", "content": respuesta.strip()})
         return respuesta.strip()
-
-    def generar_prompt_visual(self, user_input, jax_dna):
-        # ... (aplica lo mismo de pad_token_id aquí si usas el método v7.7)
-        # Asegúrate de añadir pad_token_id=self.tokenizer.eos_token_id en el .generate
-        pass
