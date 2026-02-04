@@ -4,7 +4,7 @@ from datetime import datetime
 from tqdm import tqdm
 from PIL import Image, PngImagePlugin
 from io import BytesIO
-from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler
+from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler, StableDiffusionXLImg2ImgPipeline # <-- Añade este último
 from compel import Compel, ReturnedEmbeddingsType
 from ultralytics import YOLO
 
@@ -81,12 +81,49 @@ class DvdEngine:
         return (torch.sin((1.0 - t) * omega) / so) * v0 + (torch.sin(t * omega) / so) * v1
 
     def aplicar_adetailer(self, image, prompt, neg_prompt, strength=0.35):
+        # 1. Detección
         cv_img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         results = self.face_detector(cv_img, conf=0.3)
-        if not results[0].boxes: return image
+        
+        if not results[0].boxes:
+            print("[!] Adetailer: No se detectaron rostros."); return image
+
         print(f"[*] Adetailer: Perfeccionando {len(results[0].boxes)} rostro(s)...")
-        # Aquí se ejecutará la corrección en la v6.4
-        return image
+        
+        # 2. Configurar motor de detalle (reutilizando la RAM de la GPU)
+        img2img = StableDiffusionXLImg2ImgPipeline(
+            vae=self.pipe.vae, text_encoder=self.pipe.text_encoder, 
+            text_encoder_2=self.pipe.text_encoder_2, tokenizer=self.pipe.tokenizer, 
+            tokenizer_2=self.pipe.tokenizer_2, unet=self.pipe.unet, scheduler=self.pipe.scheduler
+        )
+
+        final_image = image.copy()
+        
+        for box in results[0].boxes.xyxy:
+            x1, y1, x2, y2 = map(int, box)
+            
+            # Zoom dinámico al rostro para la corrección
+            w, h = x2 - x1, y2 - y1
+            cx, cy = x1 + w//2, y1 + h//2
+            side = int(max(w, h) * 1.5)
+            nx1, ny1 = max(0, cx - side//2), max(0, cy - side//2)
+            nx2, ny2 = min(image.width, nx1 + side), min(image.height, ny1 + side)
+            
+            face_crop = image.crop((nx1, ny1, nx2, ny2)).resize((768, 768))
+            
+            # Cirugía estética digital
+            with torch.inference_mode():
+                refined_face = img2img(
+                    prompt=prompt, negative_prompt=neg_prompt,
+                    image=face_crop, strength=strength, guidance_scale=5.0,
+                    num_inference_steps=20
+                ).images[0]
+            
+            # Pegar de vuelta la cara perfecta
+            refined_face = refined_face.resize((nx2 - nx1, ny2 - ny1))
+            final_image.paste(refined_face, (nx1, ny1))
+
+        return final_image
 
     def generar(self, prompt, neg_prompt="low quality", steps=15, width=1024, height=1024, cfg=7.5, seed=None, var_seed=None, var_strength=0.0):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
