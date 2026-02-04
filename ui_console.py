@@ -1,4 +1,4 @@
-# ui_console.py v15.6 (Final Sync)
+# ui_console.py v15.7 (Internal Scroll Fix)
 import ipywidgets as widgets
 from IPython.display import display, HTML, Javascript
 import time
@@ -23,48 +23,37 @@ def crear_interfaz(brain, motor, vram_logic, personality, p_dict):
                     display(HTML(f"<div id='{mid}' style='margin:5px;'><span style='{style}'>{cont}</span></div>"))
             elif tipo == "sys":
                 display(HTML(f"<div id='{mid}' style='text-align:center; font-size:11px; color:#f39c12; font-style:italic; margin:8px;'>{cont}</div>"))
-            display(Javascript(f"var el=document.getElementById('{mid}'); if(el) el.scrollIntoView();"))
+            
+            # --- EL PARO DEL SCROLL REAL ---
+            # Forzamos al contenedor a ir al fondo sin mover la ventana de Colab
+            display(Javascript("""
+                var out = document.querySelector('.p-Widget.jupyter-widgets.outputs.p-Widget.p-Panel');
+                if (out) { out.scrollTop = out.scrollHeight; }
+            """))
 
     def procesar(_=None):
         txt = input_field.value.strip()
         if not txt: return
         input_field.value = ""; imprimir(txt, "u")
-        
         try:
-            # Sincronizamos los parámetros actuales del notebook
             p_dict['custom_prompt'] = getattr(__main__, 'PROMPT_CUSTOM', '')
-            
             if personality.analizar_intencion(txt):
                 imprimir("📡 Preparando cámara...", "sys")
-                
-                # REGLA: get_system_prompt ahora solo recibe P_DICT
                 sys_p = personality.get_system_prompt(p_dict)
                 reaccion = brain.hablar(f"Dime algo breve sobre: {txt}", sys_p)
                 imprimir(reaccion, "ia")
-                
-                # DNA Visual
                 jax_dna = personality.get_visual_dna(p_dict)
                 prompt_visual = brain.generar_prompt_visual(txt, jax_dna)
-                
-                img = vram_logic.generar_con_intercambio(
-                    brain, motor, prompt_visual, 
-                    getattr(__main__, 'SETTINGS', "steps=15, cfg=5.5"),
-                    getattr(__main__, 'NEGATIVE_PROMPT', "low quality"),
-                    getattr(__main__, 'ADETAILER', False),
-                    getattr(__main__, 'DETECTOR_STRENGTH', 0.35)
-                )
+                img = vram_logic.generar_con_intercambio(brain, motor, prompt_visual, getattr(__main__, 'SETTINGS', "steps=15, cfg=5.5"), getattr(__main__, 'NEGATIVE_PROMPT', "low quality"), getattr(__main__, 'ADETAILER', False), getattr(__main__, 'DETECTOR_STRENGTH', 0.35))
                 if img: imprimir(img, "ia", es_img=True)
             else:
                 imprimir("💬 Escribiendo...", "sys")
-                # LLAMADA CORREGIDA: Solo un argumento
                 sys_p = personality.get_system_prompt(p_dict)
                 resp = brain.hablar(txt, sys_p)
                 imprimir(resp, "ia")
-                
         except Exception as e:
-            imprimir(f"⚠️ ERROR TÉCNICO: {str(e)}", "sys")
+            imprimir(f"⚠️ ERROR: {str(e)}", "sys")
 
     btn_send.on_click(procesar)
     input_field.on_submit(procesar)
     display(widgets.VBox([chat_log, widgets.HBox([input_field, btn_send])]))
-    with chat_log: imprimir("--- SISTEMA ONLINE | IDENTIDAD OCULTA ---", "sys")
