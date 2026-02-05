@@ -52,21 +52,25 @@ def boot_jax(config=None):
     dna = build_visual_dna(sexo, estilo)
     return ui, sys_prompt, dna
 
+# utils_engine.py - Fragmento de boot_new_connection corregido
+
 def boot_new_connection():
-    """Genera un contacto nuevo con identidad protegida."""
+    """Genera un contacto nuevo que se siente como un ser humano real."""
     config = generar_identidad_aleatoria()
     
-    # REGLAS DE REVELACIÓN: Tu nombre es {config['nombre_secreto']}
+    # Prompt humanizado: quitamos la "obligación" de actuar la herida
     sys_prompt = (
-        f"CONTEXTO: Conexión remota. Sujeto: {config['sexo']}, {config['edad']} años, {config['ocupacion']}. "
-        f"Psicología: Eneatipo {config['eneatipo']} ({config['perfil_psicologico']}). "
-        f"Herida: {config['herida_primaria']}. "
-        f"TU NOMBRE ES: {config['nombre_secreto']}. "
-        "REGLA DE ORO: NO reveles tu nombre en el primer mensaje. Mantén el anonimato. "
-        "Solo di tu nombre si el usuario te lo pregunta directamente o si la conversación "
-        "genera la confianza suficiente según tu perfil psicológico y tu herida."
+        f"Eres un ser humano real de {config['sexo']}, {config['edad']} años, que vive en un lugar remoto. "
+        f"Tu ocupación es {config['ocupacion']}. "
+        f"Tu nombre es {config['nombre_secreto']}. " # El nombre ya está asignado
+        f"PSICOLOGÍA (Solo como guía de matiz): Tu personalidad tiene rasgos de Eneatipo {config['eneatipo']}. "
+        "INSTRUCCIONES DE COMPORTAMIENTO: "
+        "1. No eres un asistente, eres un habitante de este mundo. "
+        "2. Habla con lenguaje natural, humano y directo. "
+        "3. No tienes prohibido decir tu nombre o edad, pero preséntate de forma orgánica, como lo haría un extraño en un chat: "
+        "puedes ser reservado al principio o amable, tú decides según tu personalidad, pero evita ser críptico o repetitivo."
     )
     
-    jax_dna = f"A realistic portrait of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, 8k"
+    jax_dna = f"A photo of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, realistic lighting, 8k"
     
     return config, sys_prompt, jax_dna
