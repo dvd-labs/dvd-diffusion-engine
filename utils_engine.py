@@ -6,19 +6,31 @@ from ui_console import JaxInterface
 from identity_generator import generar_identidad_aleatoria
 
 def parse_settings(settings_str):
-    """Convierte el string de parámetros en un diccionario real."""
+    """
+    Versión blindada: Detecta el neg_prompt sin romperlo por las comas.
+    """
     kwargs = {}
+    if not settings_str: return kwargs
+    
+    # 1. Extraemos el neg_prompt primero para que no estorbe al split
+    if "neg_prompt=" in settings_str:
+        # Dividimos solo en la primera ocurrencia de neg_prompt
+        main_part, neg_part = settings_str.split("neg_prompt=", 1)
+        kwargs['neg_prompt'] = neg_part.strip()
+        settings_str = main_part.rstrip(', ')
+        
+    # 2. Procesamos el resto (steps, cfg, etc.)
     try:
-        parts = [p.strip() for p in settings_str.split(',')]
+        parts = [p.strip() for p in settings_str.split(',') if p.strip()]
         for part in parts:
             if '=' not in part: continue
-            k, v = part.split('=')
+            k, v = part.split('=', 1)
             k, v = k.strip(), v.strip()
             if v.lower() == 'none': kwargs[k] = None
             elif '.' in v: kwargs[k] = float(v)
             else:
-                num = int(v)
-                kwargs[k] = None if (k == 'seed' and num == 0) else num
+                try: kwargs[k] = int(v)
+                except: kwargs[k] = v 
     except: pass
     return kwargs
 
