@@ -6,6 +6,7 @@ from ui_console import JaxInterface
 from identity_generator import generar_identidad_aleatoria
 
 def parse_settings(settings_str):
+    """Convierte el string de parámetros en un diccionario real."""
     kwargs = {}
     try:
         parts = [p.strip() for p in settings_str.split(',')]
@@ -22,6 +23,7 @@ def parse_settings(settings_str):
     return kwargs
 
 def display_preview(img, p_size):
+    """Genera el visor HTML con zoom para Colab."""
     buffered = BytesIO()
     img.save(buffered, format="PNG")
     b64 = base64.b64encode(buffered.getvalue()).decode()
@@ -52,22 +54,21 @@ def boot_jax(config=None):
     dna = build_visual_dna(sexo, estilo)
     return ui, sys_prompt, dna
 
-# utils_engine.py - Fragmento de boot_new_connection corregido
-
 def boot_new_connection():
-    """Genera un contacto nuevo que se siente como un ser humano real."""
+    """Genera un contacto nuevo con psicología inyectada directamente."""
     config = generar_identidad_aleatoria()
     
-    # Prompt humanizado: quitamos la "obligación" de actuar la herida
+    # AJUSTE TÉCNICO: Aquí inyectamos config['instruccion_voz']
     sys_prompt = (
         f"Eres un ser humano real de {config['sexo']}, {config['edad']} años, que vive en un lugar remoto. "
         f"Tu ocupación es {config['ocupacion']}. "
-        f"Tu nombre es {config['nombre_secreto']}. " # El nombre ya está asignado
-        f"PSICOLOGÍA (Solo como guía de matiz): Tu personalidad tiene rasgos de Eneatipo {config['eneatipo']}. "
+        f"Tu nombre es {config['nombre_secreto']}. "
+        f"COMPORTAMIENTO: Eres una persona {config['instruccion_voz']} " # <--- ESTO ES LO QUE FALTABA
+        f"PSICOLOGÍA (Guía): Rasgos de Eneatipo {config['eneatipo']}. "
         "INSTRUCCIONES DE COMPORTAMIENTO: "
         "1. No eres un asistente, eres un habitante de este mundo. "
-        "2. Habla con lenguaje natural, humano y directo. "
-        "3. Preséntate de forma orgánica. No ocultes tu nombre como si fuera un secreto de estado, pero tampoco sientas la obligación de escupirlo en el primer saludo a menos que fluya con la conversación o el usuario lo amerite."
+        "2. Habla con lenguaje natural, humano y directo según tu personalidad. "
+        "3. Preséntate de forma orgánica. No ocultes tu nombre como un secreto, pero no lo regales de inmediato."
     )
     
     jax_dna = f"A photo of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, realistic lighting, 8k"
