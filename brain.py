@@ -44,21 +44,49 @@ class DvdBrain:
         self.history.append({"role": "assistant", "content": respuesta.strip()})
         return respuesta.strip()
 
-    def generar_prompt_visual(self, user_input, jax_dna):
-        """Traductor técnico para el motor visual (SDXL)."""
-        system_instr = (
-            "You are an expert SDXL prompt engineer. "
-            f"Character DNA: {jax_dna}. "
-            "Output ONLY a detailed English prompt. No conversation. No Spanish."
-        )
-        
-        messages = [{"role": "system", "content": system_instr}, {"role": "user", "content": user_input}]
-        inputs = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt", return_dict=True).to("cuda")
+    # brain.py (Busca este método)
 
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs, max_new_tokens=150, do_sample=False,
-                pad_token_id=self.tokenizer.eos_token_id
-            )
-        
-        return self.tokenizer.decode(outputs[0][len(inputs['input_ids'][0]):], skip_special_tokens=True).strip()
+def generar_prompt_visual(self, user_input, jax_dna):
+    """
+    Fuerza el estilo de fotografía amateur y elimina la alucinación cinematográfica.
+    """
+    # 1. Definimos el "guion" de realismo sucio
+    prompt_sistema_visual = (
+        "TASK: Create a VERY SHORT image description. "
+        "STYLE: Amateur smartphone selfie, high quality photo, realistic, grainy, "
+        "natural lighting, direct flash, casual pose. "
+        "ABSOLUTELY NO: 3D, 2D, Animation, Studio Ghibli, professional photography, "
+        "cinematic, CGI, digital art. "
+        f"SUBJECT: {jax_dna}. " 
+        f"CONTEXT: {user_input} (make it look like a candid phone snap)."
+    )
+    
+    # 2. Preparamos el mensaje para el motor de Llama
+    messages = [
+        {"role": "system", "content": prompt_sistema_visual}, 
+        {"role": "user", "content": f"Describe the photo for: {user_input}"}
+    ]
+    
+    # 3. Procesamiento en GPU (CUDA)
+    inputs = self.tokenizer.apply_chat_template(
+        messages, 
+        add_generation_prompt=True, 
+        return_tensors="pt", 
+        return_dict=True
+    ).to("cuda")
+
+    # 4. Generación optimizada para no quemar tus 12GB de VRAM
+    with torch.no_grad():
+        outputs = self.model.generate(
+            **inputs, 
+            max_new_tokens=100, # No necesitamos más para un prompt visual
+            do_sample=True,      
+            temperature=0.7,      # Un poco de calor para que no sea repetitivo
+            pad_token_id=self.tokenizer.eos_token_id
+        )
+    
+    # 5. Entrega del resultado limpio
+    return self.tokenizer.decode(
+        outputs[0][len(inputs['input_ids'][0]):], 
+        skip_special_tokens=True
+    ).strip()
