@@ -57,16 +57,9 @@ def generar_prompt_visual(self, user_input, jax_dna):
 
     # 2. Instrucción de "Cero Tolerancia"
     system_instr = (
-        "TASK: Act as a translation and formatting tool. "
-        "STRICT RULE: Output ONLY the result of the formula. No intros, no explanations. "
         f"FORMULA: realistic photo of {jax_dna}, [ENGLISH_TRANSLATION], {params}. "
         f"TRANSLATE THIS TO ENGLISH: {user_input}"
     )
-
-    messages = [
-        {"role": "system", "content": system_instr},
-        {"role": "user", "content": f"Format this: {user_input}"}
-    ]
 
     # 3. Procesamiento Determinista
     inputs = self.tokenizer.apply_chat_template(
