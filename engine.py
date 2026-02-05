@@ -1,10 +1,11 @@
 import torch, os, requests, re, json, cv2
 import numpy as np
+import tomesd # <--- 1. NUEVO IMPORT
 from datetime import datetime
 from tqdm import tqdm
-from PIL import Image, PngImagePlugin
+from PIL import Image, PngImagePlugin, ImageFilter # Añadí ImageFilter aquí arriba para evitar error en Adetailer
 from io import BytesIO
-from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler, StableDiffusionXLImg2ImgPipeline # <-- Añade este último
+from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler, StableDiffusionXLImg2ImgPipeline
 from compel import Compel, ReturnedEmbeddingsType
 from ultralytics import YOLO
 
@@ -37,7 +38,16 @@ class DvdEngine:
             self.model_local_path, torch_dtype=torch.float16, use_safetensors=True
         ).to("cuda")
 
-        # Optimizaciones Fooocus
+        # --- 2. INYECCIÓN TOME (EL TURBO) ---
+        try:
+            # ratio=0.5 = 50% de tokens fusionados. Mayor velocidad, calidad casi idéntica.
+            tomesd.apply_patch(self.pipe, ratio=0.5)
+            print("🚀 [ToMe] Turbo activado (Ratio 0.5) - Generación acelerada.")
+        except Exception as e:
+            print(f"⚠️ [ToMe] No se pudo activar el turbo: {e}")
+        # ------------------------------------
+
+        # Optimizaciones Fooocus (TUS SETTINGS ORIGINALES)
         self.pipe.enable_freeu(s1=0.99, s2=0.95, b1=1.01, b2=1.02) 
         self.pipe.vae.enable_tiling()
         self.pipe.vae.enable_slicing()
@@ -81,13 +91,14 @@ class DvdEngine:
         return (torch.sin((1.0 - t) * omega) / so) * v0 + (torch.sin(t * omega) / so) * v1
 
     def aplicar_adetailer(self, image, prompt, neg_prompt, strength=0.35):
-        from PIL import ImageFilter, ImageOps
+        # from PIL import ImageFilter, ImageOps # Movido arriba para evitar errores de scope
         
         cv_img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-        results = self.face_detector(cv_img, conf=0.3)
+        results = self.face_detector(cv_img, conf=0.3, verbose=False) # verbose=False para limpiar log
         if not results[0].boxes: return image
 
         # Cargamos el motor de cirugía
+        # NOTA: Al compartir componentes con self.pipe, el parche ToMe TAMBIÉN se aplica aquí.
         img2img = StableDiffusionXLImg2ImgPipeline(
             vae=self.pipe.vae, text_encoder=self.pipe.text_encoder, 
             text_encoder_2=self.pipe.text_encoder_2, tokenizer=self.pipe.tokenizer, 
@@ -120,19 +131,13 @@ class DvdEngine:
             refined_face = refined_face.resize((nx2 - nx1, ny2 - ny1))
 
             # --- CORRECCIÓN DE MÁSCARA (FEATHERING REAL) ---
-            # 1. Crear máscara negra (transparente)
             mask = Image.new("L", refined_face.size, 0)
-            # 2. Crear un área blanca central más pequeña que el recorte
-            # Dejamos un margen de 20px para que el desenfoque tenga espacio
             border = 20
             inner_w, inner_h = refined_face.size[0] - (border * 2), refined_face.size[1] - (border * 2)
             draw_mask = Image.new("L", (inner_w, inner_h), 255)
-            # 3. Pegamos el centro blanco sobre el fondo negro
             mask.paste(draw_mask, (border, border))
-            # 4. Aplicamos un desenfoque pesado para crear el degradado
             mask = mask.filter(ImageFilter.GaussianBlur(radius=15))
             
-            # 5. Pegado final usando la máscara de degradado
             final_image.paste(refined_face, (nx1, ny1), mask)
             
         return final_image
