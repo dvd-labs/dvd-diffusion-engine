@@ -53,12 +53,7 @@ def generar_prompt_visual(self, user_input, jax_dna):
     """
     # 1. Instrucción agresiva de NO CHAT
     prompt_sistema_visual = (
-        "TASK: You are a TECHNICAL metadata generator for Stable Diffusion. "
-        "STRICT RULES: "
-        "1. Output ONLY the visual description. "
-        "2. NO introductions (e.g., 'Here is...', 'Prompt:'). "
-        "3. NO narrative instructions (e.g., 'Imagine a story'). "
-        "4. NO conversational filler. "
+        "TASK: generate an image prompt in kewwords style."
         f"CHARACTER DNA: {jax_dna}. "
         f"SCENE: {user_input}. "
         "FORMAT: Raw keywords and short phrases only."
