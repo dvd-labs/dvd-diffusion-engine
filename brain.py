@@ -48,45 +48,46 @@ class DvdBrain:
 
 def generar_prompt_visual(self, user_input, jax_dna):
     """
-    Fuerza el estilo de fotografía amateur y elimina la alucinación cinematográfica.
+    Genera prompts ultracortos, estilo ráfaga de palabras clave, 
+    sin introducciones ni explicaciones.
     """
-    # 1. Definimos el "guion" de realismo sucio
+    # 1. Instrucción agresiva de NO CHAT
     prompt_sistema_visual = (
-        "TASK: Create a VERY SHORT image description. "
-        "STYLE: Amateur smartphone selfie, high quality photo, realistic, grainy, "
-        "natural lighting, direct flash, casual pose. "
-        "ABSOLUTELY NO: 3D, 2D, Animation, Studio Ghibli, professional photography, "
-        "cinematic, CGI, digital art. "
-        f"SUBJECT: {jax_dna}. " 
-        f"CONTEXT: {user_input} (make it look like a candid phone snap)."
+        "TASK: You are a prompt generator for an image AI. "
+        "STRICT RULE: Output ONLY the description. DO NOT use 'Here is...', 'Prompt:', or any conversational filler. "
+        "STYLE: High-realism amateur photography, smartphone selfie, grainy, natural, candid. "
+        "ABSOLUTELY NO: 3D, CGI, Animation, Studio Ghibli, 2D art, cinematic renders. "
+        f"CHARACTER DNA: {jax_dna}. "
+        f"SCENE: {user_input}. "
+        "FORMAT: Raw keywords and short phrases only."
     )
     
-    # 2. Preparamos el mensaje para el motor de Llama
+    # 2. Mensaje limpio
     messages = [
         {"role": "system", "content": prompt_sistema_visual}, 
-        {"role": "user", "content": f"Describe the photo for: {user_input}"}
+        {"role": "user", "content": f"Generate prompt for: {user_input}"}
     ]
     
-    # 3. Procesamiento en GPU (CUDA)
     inputs = self.tokenizer.apply_chat_template(
         messages, 
         add_generation_prompt=True, 
-        return_tensors="pt", 
-        return_dict=True
+        return_tensors="pt"
     ).to("cuda")
 
-    # 4. Generación optimizada para no quemar tus 12GB de VRAM
+    # 3. Generación determinista para evitar verborrea
     with torch.no_grad():
         outputs = self.model.generate(
             **inputs, 
-            max_new_tokens=100, # No necesitamos más para un prompt visual
-            do_sample=True,      
-            temperature=0.7,      # Un poco de calor para que no sea repetitivo
+            max_new_tokens=60, # Reducimos para forzar la brevedad
+            do_sample=False,    # Al apagar el sampling, el modelo es más directo
             pad_token_id=self.tokenizer.eos_token_id
         )
     
-    # 5. Entrega del resultado limpio
-    return self.tokenizer.decode(
-        outputs[0][len(inputs['input_ids'][0]):], 
+    # 4. Limpieza de tokens
+    result = self.tokenizer.decode(
+        outputs[0][len(inputs[0]):], 
         skip_special_tokens=True
     ).strip()
+    
+    # Limpieza final por si acaso se le escapa un "Prompt:"
+    return result.replace("Prompt:", "").replace("Description:", "").strip()
