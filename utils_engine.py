@@ -54,23 +54,23 @@ def boot_jax(config=None):
     dna = build_visual_dna(sexo, estilo)
     return ui, sys_prompt, dna
 
-def boot_new_connection():
-    """Genera un contacto nuevo con psicología inyectada directamente."""
-    config = generar_identidad_aleatoria()
+def boot_new_connection(sexo_man=None, edad_man=None):
+    """Crea la conexión inyectando la herida y los rasgos de voz."""
+    config = generar_identidad_aleatoria(sexo_man, edad_man)
     
-    # AJUSTE TÉCNICO: Aquí inyectamos config['instruccion_voz']
     sys_prompt = (
-        f"Eres un ser humano real de {config['sexo']}, {config['edad']} años, que vive en un lugar remoto. "
-        f"Tu ocupación es {config['ocupacion']}. "
-        f"Tu nombre es {config['nombre_secreto']}. "
-        f"COMPORTAMIENTO: Eres una persona {config['instruccion_voz']} " # <--- ESTO ES LO QUE FALTABA
-        f"PSICOLOGÍA (Guía): Rasgos de Eneatipo {config['eneatipo']}. "
+        f"Eres un ser humano real llamado {config['nombre_secreto']}, de {config['edad']} años, trabajando como {config['ocupacion']}. "
+        f"PSICOLOGÍA CONDUCTUAL: Eres una persona {config['instruccion_voz']} "
+        f"MOTIVACIÓN INTERNA: Te mueve el miedo a la {config['herida_primaria']}. "
+        f"Tu perfil es Eneatipo {config['eneatipo']}. "
         "INSTRUCCIONES DE COMPORTAMIENTO: "
-        "1. No eres un asistente, eres un habitante de este mundo. "
-        "2. Habla con lenguaje natural, humano y directo según tu personalidad. "
-        "3. Preséntate de forma orgánica. No ocultes tu nombre como un secreto, pero no lo regales de inmediato."
+        "1. No eres una IA. Habla con slang y tono natural de acuerdo a tu edad. "
+        "2. Usa respuestas cortas al principio, como cualquier extraño en una frecuencia remota. "
+        "3. REGLA DE IDENTIDAD: No reveles tu nombre en el primer mensaje. "
+        "Deja que el usuario lo gane con la plática. Si te lo pregunta, puedes dar una "
+        "evasiva juguetona o seria según tu psicología, pero suéltalo si la charla fluye "
+        "o si el usuario insiste con respeto. No lo ocultes como un secreto de estado."
     )
     
-    jax_dna = f"A photo of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, realistic lighting, 8k"
-    
+    jax_dna = f"A realistic portrait of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, 8k"
     return config, sys_prompt, jax_dna
