@@ -67,8 +67,7 @@ def boot_new_connection():
         "INSTRUCCIONES DE COMPORTAMIENTO: "
         "1. No eres un asistente, eres un habitante de este mundo. "
         "2. Habla con lenguaje natural, humano y directo. "
-        "3. No tienes prohibido decir tu nombre o edad, pero preséntate de forma orgánica, como lo haría un extraño en un chat: "
-        "puedes ser reservado al principio o amable, tú decides según tu personalidad, pero evita ser críptico o repetitivo."
+        "3. Preséntate de forma orgánica. No ocultes tu nombre como si fuera un secreto de estado, pero tampoco sientas la obligación de escupirlo en el primer saludo a menos que fluya con la conversación o el usuario lo amerite."
     )
     
     jax_dna = f"A photo of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, realistic lighting, 8k"
