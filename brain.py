@@ -48,37 +48,15 @@ class DvdBrain:
 
 def generar_prompt_visual(self, user_input, jax_dna):
     """
-    Transforma el input en una cadena rígida de parámetros visuales.
-    Fórmula: realistic photo of [jax_dna], [translation], [params].
+    CONCATENACIÓN PURA: Cero IA, Cero historias. 
+    Ideal si ya escribes en inglés.
     """
-    # 1. Definimos los parámetros de realismo sucio (Amateur/Real)
-    # 'skin pores', 'film grain' y 'f/1.8' matan el look de IA plástica.
+    # 1. Parámetros fijos de realismo
     params = "highly detailed face, skin pores, natural lighting, raw photo, 8k, film grain, shot on 35mm lens, f/1.8"
 
-    # 2. Instrucción de "Cero Tolerancia"
-    system_instr = (
-        f"FORMULA: realistic photo of {jax_dna}, [ENGLISH_TRANSLATION], {params}. "
-        f"TRANSLATE THIS TO ENGLISH: {user_input}"
-    )
+    # 2. Construcción de la fórmula rígida
+    # realistic photo of [jax_dna], [tu texto], [ajustes técnicos]
+    prompt_final = f"realistic photo of {jax_dna}, {user_input}, {params}"
 
-    # 3. Procesamiento Determinista
-    inputs = self.tokenizer.apply_chat_template(
-        messages, 
-        add_generation_prompt=True, 
-        return_tensors="pt"
-    ).to("cuda")
-
-    with torch.no_grad():
-        outputs = self.model.generate(
-            **inputs, 
-            max_new_tokens=80, 
-            do_sample=False, # <-- Desactivado para evitar 'historias'
-            pad_token_id=self.tokenizer.eos_token_id
-        )
-
-    # 4. Extracción y Limpieza Final
-    res = self.tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True).strip()
-    
-    # Si Llama intenta ser amable a pesar de todo, aplicamos el decapado:
-    if ":" in res: res = res.split(":")[-1].strip()
-    return res.replace('"', '').replace("'", "").strip()
+    # 3. Limpieza básica por si se colaron comillas
+    return prompt_final.replace('"', '').replace("'", "").strip()
