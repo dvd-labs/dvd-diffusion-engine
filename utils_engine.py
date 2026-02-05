@@ -6,7 +6,6 @@ from ui_console import JaxInterface
 from identity_generator import generar_identidad_aleatoria
 
 def parse_settings(settings_str):
-    """Convierte el string de parámetros en un diccionario real."""
     kwargs = {}
     try:
         parts = [p.strip() for p in settings_str.split(',')]
@@ -19,16 +18,13 @@ def parse_settings(settings_str):
             else:
                 num = int(v)
                 kwargs[k] = None if (k == 'seed' and num == 0) else num
-    except:
-        pass
+    except: pass
     return kwargs
 
 def display_preview(img, p_size):
-    """Genera el visor HTML con zoom para Colab."""
     buffered = BytesIO()
     img.save(buffered, format="PNG")
     b64 = base64.b64encode(buffered.getvalue()).decode()
-
     html_preview = f"""
     <script>
         function verFullPreview(b64) {{
@@ -40,32 +36,25 @@ def display_preview(img, p_size):
         }}
     </script>
     <div style="margin: 10px 0;">
-        <img src="data:image/png;base64,{b64}"
-             style="width:{p_size}vw; border-radius:5px; cursor:zoom-in; border: 2px solid #333;"
-             onclick="verFullPreview('{b64}')">
-        <p style="color:#666; font-size:10px;">Clic para tamaño original</p>
+        <img src="data:image/png;base64,{b64}" style="width:{p_size}vw; border-radius:5px; border: 2px solid #333;" onclick="verFullPreview('{b64}')">
     </div>
     """
     display(HTML(html_preview))
 
 def boot_jax(config=None):
-    """Inicializa la interfaz y genera los prompts neutros por defecto."""
     ui = JaxInterface()
     sexo = config.get("sexo", "Neutro") if config else "Neutro"
     edad = config.get("edad", 30) if config else 30
     pers = config.get("personalidad", "Asistente") if config else "Asistente"
     lang = config.get("slang", "Ninguno") if config else "Ninguno"
     estilo = config.get("estilo", "Básico") if config else "Básico"
-
     sys_prompt = build_system_prompt(sexo, edad, pers, lang)
     dna = build_visual_dna(sexo, estilo)
     return ui, sys_prompt, dna
 
 def boot_new_connection():
-    """Genera un contacto nuevo sincronizado con identity_generator.py."""
     config = generar_identidad_aleatoria()
-    
-    # LLAVES SINCRONIZADAS: Usamos las llaves largas de tu identity_generator.py
+    # USANDO LLAVES LARGAS PARA COINCIDIR CON EL GENERADOR
     sys_prompt = (
         f"CONTEXTO ESPACIO-TEMPORAL: Conexión remota establecida. "
         f"Eres una persona de {config['sexo']}, {config['edad']} años, trabajando como {config['ocupacion']}. "
@@ -74,7 +63,5 @@ def boot_new_connection():
         "REGLAS: No eres un asistente. Eres un desconocido en un lugar lejano. "
         "En tu primer mensaje, elige un nombre para ti mismo coherente con tu perfil."
     )
-    
-    jax_dna = f"A realistic portrait of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, weathered skin, cinematic lighting, 8k"
-    
+    jax_dna = f"A realistic portrait of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, weathered skin, 8k"
     return config, sys_prompt, jax_dna
