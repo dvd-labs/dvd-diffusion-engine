@@ -1,4 +1,12 @@
+# identity_generator.py
 import random
+
+# Base de datos de nombres para variedad total
+NOMBRES_DB = {
+    "Masculino": ["Kael", "Jarek", "Zion", "Caleb", "Dax", "Silas", "Elias", "Milo", "Vane", "Nico"],
+    "Femenino": ["Lyra", "Vesper", "Nova", "Mara", "Iris", "Selene", "Kira", "Hana", "Zaya", "Rhea"],
+    "No binario": ["Echo", "Sage", "River", "Azure", "Ash", "Sol", "Grey", "Flint", "Indi", "Lux"]
+}
 
 ENEAGRAMAS = {
     1: {"nombre": "El Reformador", "herida": "Crítica / Insuficiencia", "alas": [9, 2]},
@@ -23,6 +31,9 @@ def generar_identidad_aleatoria():
     sexo = random.choice(["Masculino", "Femenino", "No binario"])
     edad = random.randint(8, 85)
     
+    # Selección de nombre basada en sexo
+    nombre = random.choice(NOMBRES_DB[sexo])
+    
     if edad < 13: oc = random.choice(OCUPACIONES["infancia"])
     elif edad < 18: oc = random.choice(OCUPACIONES["adolescencia"])
     elif edad < 65: oc = random.choice(OCUPACIONES["adulto"])
@@ -33,6 +44,7 @@ def generar_identidad_aleatoria():
     ala = random.choice(tipo_data["alas"])
     
     return {
+        "nombre_secreto": nombre,
         "sexo": sexo,
         "edad": edad,
         "ocupacion": oc,
