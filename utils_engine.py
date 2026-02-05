@@ -2,9 +2,11 @@
 import base64
 from io import BytesIO
 from IPython.display import HTML, display
+from personality import build_system_prompt, build_visual_dna
+from ui_console import JaxInterface
 
 def parse_settings(settings_str):
-    """Convierte el string de 'steps=15, width=896...' en un diccionario usable."""
+    """Convierte el string de parámetros en un diccionario real."""
     kwargs = {}
     try:
         parts = [p.strip() for p in settings_str.split(',')]
@@ -38,10 +40,29 @@ def display_preview(img, p_size):
         }}
     </script>
     <div style="margin: 10px 0;">
-        <img src="data:image/png;base64,{b64}"
-             style="width:{p_size}vw; border-radius:5px; cursor:zoom-in; border: 2px solid #333;"
-             onclick="verFullPreview('{b64}')">
+        <img src="data:image/png;base64,{{b64}}"
+             style="width:{{p_size}}vw; border-radius:5px; cursor:zoom-in; border: 2px solid #333;"
+             onclick="verFullPreview('{{b64}}')">
         <p style="color:#666; font-size:10px;">Clic para tamaño original</p>
     </div>
     """
     display(HTML(html_preview))
+
+def boot_jax(config=None):
+    """
+    Inicializa la interfaz y genera los prompts. 
+    Si no se pasa config, usa valores neutros por defecto.
+    """
+    ui = JaxInterface()
+    
+    # Si no hay config, forzamos el modo 'Asistente Aburrido'
+    sexo = config.get("sexo", "Neutro") if config else "Neutro"
+    edad = config.get("edad", 30) if config else 30
+    pers = config.get("personalidad", "Asistente") if config else "Asistente"
+    lang = config.get("slang", "Ninguno") if config else "Ninguno"
+    estilo = config.get("estilo", "Básico") if config else "Básico"
+
+    sys_prompt = build_system_prompt(sexo, edad, pers, lang)
+    dna = build_visual_dna(sexo, estilo)
+    
+    return ui, sys_prompt, dna
