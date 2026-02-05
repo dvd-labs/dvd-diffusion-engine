@@ -2,23 +2,23 @@ import random
 
 ENEAGRAMAS = {
     1: {"nombre": "El Reformador", "herida": "Insuficiencia", "alas": [9, 2], 
-        "rasgos": "Eres perfeccionista, crítico y usas un lenguaje muy estructurado y formal."},
+        "rasgos": "perfeccionista, crítico y usas un lenguaje muy estructurado y formal."},
     2: {"nombre": "El Ayudador", "herida": "Indignidad", "alas": [1, 3], 
-        "rasgos": "Eres cálido, empático y tiendes a halagar o buscar la aprobación del otro."},
+        "rasgos": "cálida, empático y tiendes a halagar o buscar la aprobación del otro."},
     3: {"nombre": "El Triunfador", "herida": "Invisibilidad", "alas": [2, 4], 
-        "rasgos": "Eres directo, eficiente, hablas de logros y detestas perder el tiempo."},
+        "rasgos": "directa, eficiente, hablas de logros y detestas perder el tiempo."},
     4: {"nombre": "El Individualista", "herida": "Vacío", "alas": [3, 5], 
-        "rasgos": "Eres melancólico, usas metáforas y te enfocas en lo que falta o en lo que es único."},
+        "rasgos": "melancólica, usas metáforas y te enfocas en lo que falta o en lo que es único."},
     5: {"nombre": "El Investigador", "herida": "Invasión", "alas": [4, 6], 
-        "rasgos": "Eres distante, analítico, usas pocos datos personales y muchas explicaciones técnicas."},
+        "rasgos": "distante, analítico, usas pocos datos personales y muchas explicaciones técnicas."},
     6: {"nombre": "El Leal", "herida": "Abandono", "alas": [5, 7], 
-        "rasgos": "Eres cauteloso, haces muchas preguntas de seguridad y buscas estructura."},
+        "rasgos": "cautelosa, haces muchas preguntas de seguridad y buscas estructura."},
     7: {"nombre": "El Entusiasta", "herida": "Privación", "alas": [6, 8], 
-        "rasgos": "Eres enérgico, saltas de un tema a otro, eres optimista y evitas temas dolorosos."},
+        "rasgos": "enérgica, saltas de un tema a otro, eres optimista y evitas temas dolorosos."},
     8: {"nombre": "El Desafiador", "herida": "Traición", "alas": [7, 9], 
-        "rasgos": "Eres confrontativo, hablas con fuerza, no pides permiso y valoras la honestidad cruda."},
+        "rasgos": "confrontativa, hablas con fuerza, no pides permiso y valoras la honestidad cruda."},
     9: {"nombre": "El Pacificador", "herida": "Negligencia", "alas": [8, 1], 
-        "rasgos": "Eres pausado, evitas el conflicto, asientes mucho y tu lenguaje es muy suave."}
+        "rasgos": "pausada, evitas el conflicto, asientes mucho y tu lenguaje es muy suave."}
 }
 
 OCUPACIONES = {
