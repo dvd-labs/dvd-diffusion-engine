@@ -21,17 +21,14 @@ OCUPACIONES = {
 }
 
 def generar_identidad_aleatoria():
-    # 1. Parámetros básicos
     sexo = random.choice(["Masculino", "Femenino", "No binario"])
     edad = random.randint(8, 85)
     
-    # 2. Selección de ocupación según edad (Lógica restaurada)
     if edad < 13: oc = random.choice(OCUPACIONES["infancia"])
     elif edad < 18: oc = random.choice(OCUPACIONES["adolescencia"])
     elif edad < 65: oc = random.choice(OCUPACIONES["adulto"])
     else: oc = random.choice(OCUPACIONES["anciano"])
     
-    # 3. Lógica de Eneagrama
     tipo_id = random.randint(1, 9)
     tipo_data = ENEAGRAMAS[tipo_id]
     ala = random.choice(tipo_data["alas"])
@@ -41,6 +38,6 @@ def generar_identidad_aleatoria():
         "edad": edad,
         "ocupacion": oc,
         "eneatipo": f"{tipo_id}w{ala}",
-        "perfil_psicologico": tipo_data["nombre"],
-        "herida_primaria": tipo_data["herida"]
+        "perfil": tipo_data["nombre"], # Llave sincronizada
+        "herida": tipo_data["herida"]  # Llave sincronizada
     }
