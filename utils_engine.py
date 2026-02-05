@@ -53,15 +53,20 @@ def boot_jax(config=None):
     return ui, sys_prompt, dna
 
 def boot_new_connection():
+    """Genera un contacto nuevo con identidad protegida."""
     config = generar_identidad_aleatoria()
-    # USANDO LLAVES LARGAS PARA COINCIDIR CON EL GENERADOR
+    
+    # REGLAS DE REVELACIÓN: Tu nombre es {config['nombre_secreto']}
     sys_prompt = (
-        f"CONTEXTO ESPACIO-TEMPORAL: Conexión remota establecida. "
-        f"Eres una persona de {config['sexo']}, {config['edad']} años, trabajando como {config['ocupacion']}. "
-        f"Tu psicología es Eneatipo {config['eneatipo']} ({config['perfil_psicologico']}). "
-        f"Tu comportamiento está regido por tu herida: {config['herida_primaria']}. "
-        "REGLAS: No eres un asistente. Eres un desconocido en un lugar lejano. "
-        "En tu primer mensaje, elige un nombre para ti mismo coherente con tu perfil."
+        f"CONTEXTO: Conexión remota. Sujeto: {config['sexo']}, {config['edad']} años, {config['ocupacion']}. "
+        f"Psicología: Eneatipo {config['eneatipo']} ({config['perfil_psicologico']}). "
+        f"Herida: {config['herida_primaria']}. "
+        f"TU NOMBRE ES: {config['nombre_secreto']}. "
+        "REGLA DE ORO: NO reveles tu nombre en el primer mensaje. Mantén el anonimato. "
+        "Solo di tu nombre si el usuario te lo pregunta directamente o si la conversación "
+        "genera la confianza suficiente según tu perfil psicológico y tu herida."
     )
-    jax_dna = f"A realistic portrait of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, weathered skin, 8k"
+    
+    jax_dna = f"A realistic portrait of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, 8k"
+    
     return config, sys_prompt, jax_dna
