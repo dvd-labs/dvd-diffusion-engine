@@ -1,4 +1,3 @@
-# utils_engine.py
 import base64
 from io import BytesIO
 from IPython.display import HTML, display
@@ -41,22 +40,17 @@ def display_preview(img, p_size):
         }}
     </script>
     <div style="margin: 10px 0;">
-        <img src="data:image/png;base64,{{b64}}"
-             style="width:{{p_size}}vw; border-radius:5px; cursor:zoom-in; border: 2px solid #333;"
-             onclick="verFullPreview('{{b64}}')">
+        <img src="data:image/png;base64,{b64}"
+             style="width:{p_size}vw; border-radius:5px; cursor:zoom-in; border: 2px solid #333;"
+             onclick="verFullPreview('{b64}')">
         <p style="color:#666; font-size:10px;">Clic para tamaño original</p>
     </div>
     """
     display(HTML(html_preview))
 
 def boot_jax(config=None):
-    """
-    Inicializa la interfaz y genera los prompts. 
-    Si no se pasa config, usa valores neutros por defecto.
-    """
+    """Inicializa la interfaz y genera los prompts neutros por defecto."""
     ui = JaxInterface()
-    
-    # Si no hay config, forzamos el modo 'Asistente Aburrido'
     sexo = config.get("sexo", "Neutro") if config else "Neutro"
     edad = config.get("edad", 30) if config else 30
     pers = config.get("personalidad", "Asistente") if config else "Asistente"
@@ -65,24 +59,22 @@ def boot_jax(config=None):
 
     sys_prompt = build_system_prompt(sexo, edad, pers, lang)
     dna = build_visual_dna(sexo, estilo)
-    
     return ui, sys_prompt, dna
 
 def boot_new_connection():
-    """Genera un contacto totalmente nuevo desde el espacio-tiempo."""
+    """Genera un contacto nuevo sincronizado con identity_generator.py."""
     config = generar_identidad_aleatoria()
     
-    # Prompt técnico que fuerza la psicología del Eneagrama
+    # LLAVES SINCRONIZADAS: Usamos las llaves largas de tu identity_generator.py
     sys_prompt = (
         f"CONTEXTO ESPACIO-TEMPORAL: Conexión remota establecida. "
         f"Eres una persona de {config['sexo']}, {config['edad']} años, trabajando como {config['ocupacion']}. "
-        f"Tu psicología es Eneatipo {config['eneatipo']} ({config['perfil']}). "
-        f"Tu comportamiento está regido por tu herida: {config['herida']}. "
+        f"Tu psicología es Eneatipo {config['eneatipo']} ({config['perfil_psicologico']}). "
+        f"Tu comportamiento está regido por tu herida: {config['herida_primaria']}. "
         "REGLAS: No eres un asistente. Eres un desconocido en un lugar lejano. "
         "En tu primer mensaje, elige un nombre para ti mismo coherente con tu perfil."
     )
     
-    # DNA visual para SDXL basado en la ocupación generada
     jax_dna = f"A realistic portrait of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, weathered skin, cinematic lighting, 8k"
     
     return config, sys_prompt, jax_dna
