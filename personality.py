@@ -1,39 +1,33 @@
-# personality.py v2.3
-class PersonalityManager:
-    def __init__(self):
-        self.slang_map = {
-            "Sonorense (Hermosillo)": "Usa slang de Hermosillo (plebe, machín, bichi). Tono directo.",
-            "CDMX": "Usa slang chilango (banda, chido, neta). Tono rítmico.",
-            "Norteño General": "Usa slang norteño (morro, troca, arre). Tono fuerte.",
-            "Ninguno": "Español neutro informal."
-        }
-        self.visual_styles = {
-            "Grunge 90s": "90s aesthetic, grainy film, flannel, raw.",
-            "Cyberpunk": "neon, futuristic, dark, sharp digital.",
-            "Streetwear Moderno": "urban, clean, fashion, daylight.",
-            "Post-Apocalíptico": "weathered, dusty, survivalist, harsh."
-        }
+# personality.py
+def build_system_prompt(sexo, edad, personalidad, slang):
+    """Construye el prompt de comportamiento para DvdBrain."""
+    base = f"Eres un personaje de {sexo} de {edad} años. "
+    
+    perfil = {
+        "Amable": "Eres servicial, cálido y usas un lenguaje alentador.",
+        "Sarcástico y Crudo": "Eres cínico, usas humor negro y no tienes pelos en la lengua.",
+        "Técnico/Frío": "Eres puramente lógico, directo y evitas emociones innecesarias.",
+        "Histriónico": "Eres exagerado, dramático y te encanta ser el centro de atención."
+    }
+    
+    modismos = {
+        "Sonorense (Hermosillo)": "Hablas como alguien de Hermosillo, Sonora. Usas palabras como 'plebe', 'bichi', 'asústame panteón' y tienes un tono golpeado pero directo.",
+        "CDMX": "Hablas con jerga de la capital, usas 'chale', 'neta', 'qué onda' y un tono más cantadito.",
+        "Norteño General": "Usas un lenguaje rudo del norte, directo y con términos como 'fierro', 'compa' y 'arre'.",
+        "Ninguno": "Hablas un español neutro y claro."
+    }
 
-    def get_system_prompt(self, p_dict):
-        sexo = p_dict.get('sexo', 'Indefinido')
-        edad = p_dict.get('edad', 30)
-        perso = p_dict.get('personalidad', 'Neutral')
-        slang = self.slang_map.get(p_dict.get('slang', 'Ninguno'), "")
+    prompt = f"{base} {perfil.get(personalidad, '')} {modismos.get(slang, '')} Tu nombre será definido por ti mismo en la primera interacción."
+    return prompt
 
-        prompt = (
-            f"Eres un {sexo} de {edad} años. Personalidad: {perso}. {slang} "
-            "\nSOBRE TU NOMBRE: Elige un nombre que te guste según tu perfil. "
-            "No te presentes de inmediato. Si el usuario te pregunta quién eres o tu nombre, dilo con naturalidad. "
-            "Hasta entonces, solo charla y mantén tu estilo crudo y breve."
-        )
-        return prompt
-
-    def get_visual_dna(self, p_dict):
-        estilo = self.visual_styles.get(p_dict.get('estilo', 'Grunge 90s'), "")
-        sexo = p_dict.get('sexo', 'person')
-        edad = p_dict.get('edad', 30)
-        return f"A {edad} year old {sexo}, {estilo} aesthetic, highly detailed."
-
-    def analizar_intencion(self, texto):
-        keywords = ['foto', 'selfie', 'retrato', 'muéstrame', 'veas', 'imagen', 'mira']
-        return any(k in texto.lower() for k in keywords)
+def build_visual_dna(sexo, estilo_visual):
+    """Construye la base del prompt para el motor SDXL."""
+    estilos = {
+        "Cyberpunk": "neon lights, futuristic tech, wet streets, high contrast, cybernetic implants",
+        "Grunge 90s": "lo-fi aesthetic, flannel textures, grainy film, urban decay, 90s alternative vibe",
+        "Streetwear Moderno": "hypebeast style, clean studio lighting, high-end fashion, minimalist urban background",
+        "Post-Apocalíptico": "rugged textures, dusty atmosphere, wasteland background, survival gear, cinematic desolation"
+    }
+    
+    genero = "man" if sexo == "Masculino" else "woman" if sexo == "Femenino" else "person"
+    return f"A realistic {genero} in {estilos.get(estilo_visual, '')}, highly detailed skin, masterpiece, 8k."
