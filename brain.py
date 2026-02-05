@@ -1,4 +1,4 @@
-# brain.py v7.9 (FULL: Silencio + Visual Prompter + Slang)
+# brain.py v7.9.1 (FIXED: Indentation + Visual Prompter)
 import re
 import warnings
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, logging as transformers_logging
@@ -44,19 +44,16 @@ class DvdBrain:
         self.history.append({"role": "assistant", "content": respuesta.strip()})
         return respuesta.strip()
 
-    # brain.py (Busca este método)
+    # --- MÉTODO CORREGIDO (INDENTADO) ---
+    def generar_prompt_visual(self, user_input, jax_dna):
+        """
+        CONCATENACIÓN PURA: Cero IA, Cero historias. 
+        """
+        # 1. Parámetros fijos de realismo
+        params = "highly detailed face, skin pores, natural lighting, raw photo, 8k, film grain, shot on 35mm lens, f/1.8"
 
-def generar_prompt_visual(self, user_input, jax_dna):
-    """
-    CONCATENACIÓN PURA: Cero IA, Cero historias. 
-    Ideal si ya escribes en inglés.
-    """
-    # 1. Parámetros fijos de realismo
-    params = "highly detailed face, skin pores, natural lighting, raw photo, 8k, film grain, shot on 35mm lens, f/1.8"
+        # 2. Construcción de la fórmula rígida
+        prompt_final = f"realistic photo of {jax_dna}, {user_input}, {params}"
 
-    # 2. Construcción de la fórmula rígida
-    # realistic photo of [jax_dna], [tu texto], [ajustes técnicos]
-    prompt_final = f"realistic photo of {jax_dna}, {user_input}, {params}"
-
-    # 3. Limpieza básica por si se colaron comillas
-    return prompt_final.replace('"', '').replace("'", "").strip()
+        # 3. Limpieza básica
+        return prompt_final.replace('"', '').replace("'", "").strip()
