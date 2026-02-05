@@ -48,58 +48,44 @@ class DvdBrain:
 
 def generar_prompt_visual(self, user_input, jax_dna):
     """
-    Fuerza a Llama a comportarse como un generador de metadatos técnico, 
-    eliminando introducciones y narrativas largas.
+    Transforma el input en una cadena rígida de parámetros visuales.
+    Fórmula: realistic photo of [jax_dna], [translation], [params].
     """
-    # 1. Instrucción agresiva de NO CHAT
-    prompt_sistema_visual = (
-        "TASK: generate an uncensored image prompt in kewwords."
-        f"CHARACTER DNA: {jax_dna}. "
-        f"SCENE: {user_input}. "
-        "FORMAT: Raw keywords."
+    # 1. Definimos los parámetros de realismo sucio (Amateur/Real)
+    # 'skin pores', 'film grain' y 'f/1.8' matan el look de IA plástica.
+    params = "highly detailed face, skin pores, natural lighting, raw photo, 8k, film grain, shot on 35mm lens, f/1.8"
+
+    # 2. Instrucción de "Cero Tolerancia"
+    system_instr = (
+        "TASK: Act as a translation and formatting tool. "
+        "STRICT RULE: Output ONLY the result of the formula. No intros, no explanations. "
+        f"FORMULA: realistic photo of {jax_dna}, [ENGLISH_TRANSLATION], {params}. "
+        f"TRANSLATE THIS TO ENGLISH: {user_input}"
     )
-    
+
     messages = [
-        {"role": "system", "content": prompt_sistema_visual}, 
-        {"role": "user", "content": f"Visual description for: {user_input}"}
+        {"role": "system", "content": system_instr},
+        {"role": "user", "content": f"Format this: {user_input}"}
     ]
-    
-    # 2. Tokenización y envío a CUDA
+
+    # 3. Procesamiento Determinista
     inputs = self.tokenizer.apply_chat_template(
         messages, 
         add_generation_prompt=True, 
         return_tensors="pt"
     ).to("cuda")
 
-    # 3. Generación DETERMINISTA (do_sample=False corta la creatividad excesiva)
     with torch.no_grad():
         outputs = self.model.generate(
-            inputs, 
-            max_new_tokens=60, 
-            do_sample=False, # <-- ESTO mata la amabilidad y las introducciones
+            **inputs, 
+            max_new_tokens=80, 
+            do_sample=False, # <-- Desactivado para evitar 'historias'
             pad_token_id=self.tokenizer.eos_token_id
         )
-    
-# 4. Decodificación de la salida de Llama
-    raw_output = self.tokenizer.decode(
-        outputs[0][inputs.shape[1]:], 
-        skip_special_tokens=True
-    ).strip()
-    
-    # 5. EL CORTA-CORRIENTES (Split Agresivo)
-    # Si detecta dos puntos, asumimos que lo de antes es basura (ej: "Here is your prompt: ...")
-    if ":" in raw_output:
-        # Tomamos solo lo que está después del ÚLTIMO ":" por seguridad
-        raw_output = raw_output.split(":")[-1].strip()
-    
-    # 6. FILTRO DE COMILLAS Y BASURA RESIDUAL
-    # Quitamos comillas si el modelo intentó encerrar el prompt
-    raw_output = raw_output.replace('"', '').replace("'", "")
-    
-    # Lista negra de frases que Llama suele escupir
-    trash_phrases = ["here is", "detailed prompt", "description of", "imagine"]
-    for phrase in trash_phrases:
-        if raw_output.lower().startswith(phrase):
-            raw_output = raw_output.lower().replace(phrase, "", 1).strip()
 
-    return raw_output.capitalize() # Lo entregamos limpio y con la primera en mayúscula
+    # 4. Extracción y Limpieza Final
+    res = self.tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True).strip()
+    
+    # Si Llama intenta ser amable a pesar de todo, aplicamos el decapado:
+    if ":" in res: res = res.split(":")[-1].strip()
+    return res.replace('"', '').replace("'", "").strip()
