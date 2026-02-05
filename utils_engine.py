@@ -4,6 +4,7 @@ from io import BytesIO
 from IPython.display import HTML, display
 from personality import build_system_prompt, build_visual_dna
 from ui_console import JaxInterface
+from identity_generator import generar_identidad_aleatoria
 
 def parse_settings(settings_str):
     """Convierte el string de parámetros en un diccionario real."""
@@ -66,3 +67,22 @@ def boot_jax(config=None):
     dna = build_visual_dna(sexo, estilo)
     
     return ui, sys_prompt, dna
+
+def boot_new_connection():
+    """Genera un contacto totalmente nuevo desde el espacio-tiempo."""
+    config = generar_identidad_aleatoria()
+    
+    # Prompt técnico que fuerza la psicología del Eneagrama
+    sys_prompt = (
+        f"CONTEXTO ESPACIO-TEMPORAL: Conexión remota establecida. "
+        f"Eres una persona de {config['sexo']}, {config['edad']} años, trabajando como {config['ocupacion']}. "
+        f"Tu psicología es Eneatipo {config['eneatipo']} ({config['perfil']}). "
+        f"Tu comportamiento está regido por tu herida: {config['herida']}. "
+        "REGLAS: No eres un asistente. Eres un desconocido en un lugar lejano. "
+        "En tu primer mensaje, elige un nombre para ti mismo coherente con tu perfil."
+    )
+    
+    # DNA visual para SDXL basado en la ocupación generada
+    jax_dna = f"A realistic portrait of a {config['edad']} year old {config['sexo']} {config['ocupacion']}, weathered skin, cinematic lighting, 8k"
+    
+    return config, sys_prompt, jax_dna
