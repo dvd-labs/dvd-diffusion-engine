@@ -85,16 +85,26 @@ def generar_prompt_visual(self, user_input, jax_dna):
             pad_token_id=self.tokenizer.eos_token_id
         )
     
-    # 4. Limpieza de salida (Aseguramos que solo devuelva el texto generado)
+# 4. Decodificación de la salida de Llama
     raw_output = self.tokenizer.decode(
         outputs[0][inputs.shape[1]:], 
         skip_special_tokens=True
     ).strip()
     
-    # 5. FILTRO DE BASURA FINAL
-    frases_basura = ["Here is a", "Here's a", "A detailed English prompt", "Prompt:", "Description:"]
-    for frase in frases_basura:
-        if raw_output.lower().startswith(frase.lower()):
-            raw_output = raw_output.split(":", 1)[-1] if ":" in raw_output else raw_output.replace(frase, "")
+    # 5. EL CORTA-CORRIENTES (Split Agresivo)
+    # Si detecta dos puntos, asumimos que lo de antes es basura (ej: "Here is your prompt: ...")
+    if ":" in raw_output:
+        # Tomamos solo lo que está después del ÚLTIMO ":" por seguridad
+        raw_output = raw_output.split(":")[-1].strip()
     
-    return raw_output.strip()
+    # 6. FILTRO DE COMILLAS Y BASURA RESIDUAL
+    # Quitamos comillas si el modelo intentó encerrar el prompt
+    raw_output = raw_output.replace('"', '').replace("'", "")
+    
+    # Lista negra de frases que Llama suele escupir
+    trash_phrases = ["here is", "detailed prompt", "description of", "imagine"]
+    for phrase in trash_phrases:
+        if raw_output.lower().startswith(phrase):
+            raw_output = raw_output.lower().replace(phrase, "", 1).strip()
+
+    return raw_output.capitalize() # Lo entregamos limpio y con la primera en mayúscula
