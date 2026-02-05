@@ -23,9 +23,9 @@ OCUPACIONES = {
 def generar_identidad_aleatoria():
     # 1. Parámetros básicos
     sexo = random.choice(["Masculino", "Femenino", "No binario"])
-    edad = random.randint(8, 85) # Permite menores de edad
+    edad = random.randint(8, 85)
     
-    # 2. Selección de ocupación según edad
+    # 2. Selección de ocupación según edad (Lógica restaurada)
     if edad < 13: oc = random.choice(OCUPACIONES["infancia"])
     elif edad < 18: oc = random.choice(OCUPACIONES["adolescencia"])
     elif edad < 65: oc = random.choice(OCUPACIONES["adulto"])
@@ -37,7 +37,6 @@ def generar_identidad_aleatoria():
     ala = random.choice(tipo_data["alas"])
     
     return {
-        "nombre_clave": "PENDIENTE", # Se definirá en la primera charla
         "sexo": sexo,
         "edad": edad,
         "ocupacion": oc,
