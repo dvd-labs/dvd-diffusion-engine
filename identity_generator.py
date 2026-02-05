@@ -1,4 +1,3 @@
-# identity_generator.py
 import random
 
 ENEAGRAMAS = {
@@ -38,6 +37,6 @@ def generar_identidad_aleatoria():
         "edad": edad,
         "ocupacion": oc,
         "eneatipo": f"{tipo_id}w{ala}",
-        "perfil": tipo_data["nombre"], # Llave sincronizada
-        "herida": tipo_data["herida"]  # Llave sincronizada
+        "perfil_psicologico": tipo_data["nombre"],
+        "herida_primaria": tipo_data["herida"]
     }
