@@ -48,46 +48,53 @@ class DvdBrain:
 
 def generar_prompt_visual(self, user_input, jax_dna):
     """
-    Genera prompts ultracortos, estilo ráfaga de palabras clave, 
-    sin introducciones ni explicaciones.
+    Fuerza a Llama a comportarse como un generador de metadatos técnico, 
+    eliminando introducciones y narrativas largas.
     """
     # 1. Instrucción agresiva de NO CHAT
     prompt_sistema_visual = (
-        "TASK: You are a prompt generator for an image AI. "
-        "STRICT RULE: Output ONLY the description. DO NOT use 'Here is...', 'Prompt:', or any conversational filler. "
-        "STYLE: High-realism amateur photography, smartphone selfie, grainy, natural, candid. "
-        "ABSOLUTELY NO: 3D, CGI, Animation, Studio Ghibli, 2D art, cinematic renders. "
+        "TASK: You are a TECHNICAL metadata generator for Stable Diffusion. "
+        "STRICT RULES: "
+        "1. Output ONLY the visual description. "
+        "2. NO introductions (e.g., 'Here is...', 'Prompt:'). "
+        "3. NO narrative instructions (e.g., 'Imagine a story'). "
+        "4. NO conversational filler. "
         f"CHARACTER DNA: {jax_dna}. "
         f"SCENE: {user_input}. "
         "FORMAT: Raw keywords and short phrases only."
     )
     
-    # 2. Mensaje limpio
     messages = [
         {"role": "system", "content": prompt_sistema_visual}, 
-        {"role": "user", "content": f"Generate prompt for: {user_input}"}
+        {"role": "user", "content": f"Visual description for: {user_input}"}
     ]
     
+    # 2. Tokenización y envío a CUDA
     inputs = self.tokenizer.apply_chat_template(
         messages, 
         add_generation_prompt=True, 
         return_tensors="pt"
     ).to("cuda")
 
-    # 3. Generación determinista para evitar verborrea
+    # 3. Generación DETERMINISTA (do_sample=False corta la creatividad excesiva)
     with torch.no_grad():
         outputs = self.model.generate(
-            **inputs, 
-            max_new_tokens=60, # Reducimos para forzar la brevedad
-            do_sample=False,    # Al apagar el sampling, el modelo es más directo
+            inputs, 
+            max_new_tokens=60, 
+            do_sample=False, # <-- ESTO mata la amabilidad y las introducciones
             pad_token_id=self.tokenizer.eos_token_id
         )
     
-    # 4. Limpieza de tokens
-    result = self.tokenizer.decode(
-        outputs[0][len(inputs[0]):], 
+    # 4. Limpieza de salida (Aseguramos que solo devuelva el texto generado)
+    raw_output = self.tokenizer.decode(
+        outputs[0][inputs.shape[1]:], 
         skip_special_tokens=True
     ).strip()
     
-    # Limpieza final por si acaso se le escapa un "Prompt:"
-    return result.replace("Prompt:", "").replace("Description:", "").strip()
+    # 5. FILTRO DE BASURA FINAL
+    frases_basura = ["Here is a", "Here's a", "A detailed English prompt", "Prompt:", "Description:"]
+    for frase in frases_basura:
+        if raw_output.lower().startswith(frase.lower()):
+            raw_output = raw_output.split(":", 1)[-1] if ":" in raw_output else raw_output.replace(frase, "")
+    
+    return raw_output.strip()
