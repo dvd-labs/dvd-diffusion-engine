@@ -1,4 +1,3 @@
-%%writefile vram_logic.py
 import torch
 import gc
 from IPython.display import HTML, display
