@@ -1,86 +1,88 @@
-# dna_data.py - v42.0: Power Tokens & Conceptos Comprimidos
+# dna_data.py - v44.0: Sincronizado con Checkboxes
 
-# 1. ETNIAS (Solo la raza, sin describir ojos ni pelo a menos que sea vital)
+# 1. ETNIAS
 ETHNICITY_DNA = {
     "Nordico": "Scandinavian",
-    "Latino": "Latina" if "Female" in globals().get('SEXO', '') else "Latino", # Ajuste dinámico simple
+    "Latino": "Latina" if "Female" in globals().get('SEXO', '') else "Latino", 
     "Afro": "African American",
     "Asiatico": "Japanese",
     "Mediterraneo": "Italian"
 }
 
-# 2. COMPLEXIÓN (Tipos de cuerpo visuales)
-# Usamos términos de casting/moda que SDXL entiende perfecto
+# 2. COMPLEXIÓN (Español)
 COMPLEXIONS = {
-    "Curtido_Duro": "rugged",          # Piel áspera, texturas fuertes
-    "Atletico": "athletic",            # Fibroso y en forma
-    "Pesado": "heavyset",              # Robusto realista (sin ser ofensivo)
-    "Delgado": "slender",              # Elegante, modelo, fino
-    "Flaco": "skinny",                 # Delgado normal/callejero
-    "Demacrado": "emaciated",          # Huesos salidos, look enfermo/extremo
-    "Promedio": "average build"        # Cuerpo normal, sin definir
+    "Curtido_Duro": "rugged",
+    "Atletico": "athletic",
+    "Pesado": "heavyset",
+    "Delgado": "slender",
+    "Flaco": "skinny",
+    "Demacrado": "emaciated",
+    "Promedio": "average build"
 }
 
-# 3. ESTEREOTIPOS (POWER TOKENS PUROS)
+# 3. ESTEREOTIPOS
 STEREOTYPES = {
     "Vaquero": "Cowboy",
-    "Metalero": "Metalhead",               # Tu corrección: PERFECTA
-    "Techie": "Nerd",                      # Tu corrección: PERFECTA
-    "Gotico": "Goth",                      # Nuevo
-    "Punk": "Punk",                        # Nuevo
-    "Hipster": "Hipster",                  # Nuevo
-    "Hippie": "Hippie",                    # Nuevo
-    "Biker": "Biker",                      # Nuevo
-    "Ejecutivo": "Corporate Business",     # Traje y corbata
-    "Callejero": "Streetwear"              # Urbano moderno
+    "Metalero": "Metalhead",
+    "Techie": "Nerd",
+    "Gotico": "Goth",
+    "Punk": "Punk",
+    "Hipster": "Hipster",
+    "Hippie": "Hippie",
+    "Biker": "Biker",
+    "Ejecutivo": "Corporate Business",
+    "Callejero": "Streetwear"
 }
 
-# 4. ACCESORIOS (Modular: Se pueden combinar)
+# 4. ACCESORIOS (Aquí estaba el error - Ahora sí coinciden)
 ACCESSORIES_DNA = {
-    "Lentes": "glasses",                # Simple y efectivo
-    "Aretes": "earrings",               # Detalle fino
-    "Tatuajes": "tattoos",              # Textura en piel
-    "Piercings": "facial piercings",    # Realismo
-    "Maquillaje": "makeup",             # Estilo
-    "Joyeria": "jewelry"                # Collares/Anillos genéricos
+    "Lentes": "glasses",
+    "Aretes": "earrings",
+    "Tatuajes": "tattoos",
+    "Piercings": "facial piercings",
+    "Maquillaje": "makeup",
+    "Joyeria": "jewelry"
 }
 
-# 5. ACCIONES (Verbos directos)
+# 5. ACCIONES
 ACTIONS = {
     "Estatico": "standing still",
     "Caminando": "walking",
-    "Cubriendose_Arena": "shielding eyes from sandstorm",
+    "Posando": "posing",
     "Fumando": "smoking",
-    "Gritando_Al_Cielo": "screaming at the sky"
+    "Gritando": "screaming"
 }
 
-# 6. ENCUADRE (Términos de cine)
+# 6. ENCUADRE (Versión Descontaminada)
 FRAMING_SHOTS = {
     "Primer_Plano (Close-Up)": "close-up portrait",
-    "Medio_Cuerpo (Mid-Shot)": "medium shot",
-    "Plano_Americano (Knees-Up)": "cowboy shot",
-    "Cuerpo_Completo (Full-Body)": "full body shot"
+    "Medio_Cuerpo (Mid-Shot)": "medium shot, waist up",
+    # AQUÍ EL CAMBIO: Quitamos 'cowboy shot', usamos la técnica
+    "Plano_Americano (Knees-Up)": "three-quarter shot, framing from knees up",
+    "Cuerpo_Completo (Full-Body)": "full body shot, showing shoes"
 }
 
-# 7. HÁBITAT (Lugares icónicos)
+# 7. HÁBITAT
 HABITATS = {
-    "Favela_Gritty": "Favela slum",
-    "Apartamento_Vivido": "messy bedroom",
-    "Penthouse_Minimal": "luxury penthouse",
-    "Workshop_Garage": "mechanic garage"
+    "Callejon": "dark alley",
+    "Apartamento": "messy bedroom",
+    "Penthouse": "luxury penthouse",
+    "Taller": "garage workshop",
+    "Bosque": "forest",
+    "Desierto": "desert",
+    "Neon_City": "cyberpunk city street"
 }
 
-# 8. CLIMA (Atmósfera en 2 palabras)
+# 8. CLIMA
 CLIMATES = {
-    "Soleado_Sonora": "harsh desert sun",
-    "Nublado_Gris": "overcast day",
-    "Lluvia_Cinematografica": "rainy night",
-    "Tormenta_Arena": "sandstorm",
-    "Atardecer_Dorado": "golden hour"
+    "Soleado": "hard sun",
+    "Nublado": "overcast",
+    "Lluvia": "rainy",
+    "Noche": "night time",
+    "Atardecer": "golden hour"
 }
 
-# 9. MODOS DE CÁMARA (Técnica Pura)
-# Mantenemos esto técnico porque define el "look" de la foto, no el contenido.
+# 9. MODOS DE CÁMARA
 CAMERA_MODES = {
     "Retrato": {
         "pos": "85mm lens, f/1.8, bokeh",
