@@ -62,3 +62,69 @@ def mostrar_tarjeta_galeria(img, meta, filename, steps, wd, ht, cfg, seed, promp
     </div>
     """
     display(HTML(html_code))
+
+def mostrar_consola_debug(prompt, neg_prompt, steps, cfg, seed, width, height):
+    """
+    Renderiza la consola de estilo Matrix/Hacker para ver el prompt sin generar.
+    """
+    estilo_css = """
+    <style>
+        .dvd-console { 
+            background-color: #0d0d0d; 
+            color: #cccccc; 
+            font-family: 'Consolas', 'Monaco', monospace; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #333; 
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+        .dvd-wrap { 
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+        }
+        .dvd-title { 
+            color: #00ff99; 
+            font-weight: bold; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 5px; 
+            margin-bottom: 10px; 
+        }
+        .dvd-label { 
+            color: #4da6ff; 
+            font-weight: bold; 
+            margin-top: 10px; 
+            display: block; 
+        }
+        .dvd-neg { 
+            color: #ff4d4d; 
+            font-weight: bold; 
+            margin-top: 10px; 
+            display: block; 
+        }
+        .dvd-meta { 
+            color: #666; 
+            font-size: 0.9em; 
+            margin-top: 15px; 
+            border-top: 1px dashed #333; 
+            padding-top: 5px; 
+        }
+    </style>
+    """
+    
+    contenido_html = f"""
+    <div class="dvd-console">
+        <div class="dvd-title">🧪 MODO DEBUG: VISUALIZACIÓN DE PROMPT</div>
+        
+        <span class="dvd-label">📝 POSITIVE PROMPT:</span>
+        <div class="dvd-wrap">{prompt}</div>
+        
+        <span class="dvd-neg">⛔ NEGATIVE PROMPT:</span>
+        <div class="dvd-wrap">{neg_prompt}</div>
+        
+        <div class="dvd-meta">
+            ⚙️ SETTINGS: Steps: {steps} | CFG: {cfg} | Seed: {seed} | Size: {width}x{height}
+        </div>
+    </div>
+    """
+    display(HTML(estilo_css + contenido_html))
