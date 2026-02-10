@@ -65,10 +65,10 @@ ACTIONS = {
 
 # 6. ENCUADRE (Versión Descontaminada)
 FRAMING_SHOTS = {
-    "Primer_Plano (Close-Up)": "close-up portrait",
+    "Primer_Plano (Close-Up)": "close-up portrait, head and shoulders",
     "Medio_Cuerpo (Mid-Shot)": "medium shot, waist up",
-    # AQUÍ EL CAMBIO: Quitamos 'cowboy shot', usamos la técnica
-    "Plano_Americano (Knees-Up)": "three-quarter shot, framing from knees up",
+    # CAMBIO AQUÍ: Agregamos 'cut off at knees' y 'thigh-up'
+    "Plano_Americano (Knees-Up)": "medium-full shot, thigh-up framing, cut off at knees, shot from thighs up",
     "Cuerpo_Completo (Full-Body)": "full body shot, showing shoes"
 }
 
@@ -98,6 +98,12 @@ CAMERA_MODES = {
         "pos": "85mm lens, f/1.8, bokeh",
         "neg": "wide angle, distorted"
     },
+    # --- NUEVO MODO: EL EQUILIBRADO ---
+    "Cine_Estandar": {
+        "pos": "50mm lens, f/2.8, depth of field",
+        "neg": "fisheye, extreme close-up"
+    },
+    # ----------------------------------
     "Infinito": {
         "pos": "24mm lens, f/8, sharp focus",
         "neg": "bokeh, blur, macro"
