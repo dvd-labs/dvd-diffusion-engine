@@ -15,14 +15,27 @@ def parse_manual_string(s_str, default_steps, default_cfg, default_seed):
 
 def get_gender_term(sex, age_str):
     try:
+        # Extraemos el número (ej: "12-year-old" -> 12)
         age = int(re.search(r'\d+', age_str).group())
     except:
-        age = 19
+        age = 30 # Default de seguridad
+
+    # --- LÓGICA MASCULINA ---
     if sex == "Male":
-        if age < 13: return "little boy"
-        if age < 30: return "young man"
-        return "man, adult male"
+        if age < 4:  return "toddler boy"       # 0-3: Proporciones de bebé (cabeza grande)
+        if age < 10: return "little boy"        # 4-9: Infancia clásica (Child/Kid)
+        if age < 13: return "preteen boy"       # 10-12: La etapa "incómoda" antes de la pubertad
+        if age < 20: return "teenage boy"       # 13-19: Adolescencia
+        if age < 30: return "young man"         # 20-29: Juventud plena
+        if age < 60: return "middle-aged man"   # 30-59: Madurez y texturas
+        return "elderly man"                    # 60+: Vejez
+
+    # --- LÓGICA FEMENINA ---
     else:
-        if age < 13: return "little girl"
-        if age < 30: return "girl"
-        return "woman, adult female"
+        if age < 4:  return "toddler girl"
+        if age < 10: return "little girl"
+        if age < 13: return "preteen girl"
+        if age < 20: return "teenage girl"
+        if age < 30: return "young woman"
+        if age < 60: return "middle-aged woman"
+        return "elderly woman"
