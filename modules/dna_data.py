@@ -96,17 +96,17 @@ CLIMATES = {
 CAMERA_MODES = {
     "Retrato": {
         "pos": "85mm lens, f/1.8, bokeh",
-        "neg": "wide angle, distorted"
+        "neg": "wide angle, distorted, noise, grain, grainy"
     },
     # --- NUEVO MODO: EL EQUILIBRADO ---
     "Cine_Estandar": {
         "pos": "50mm lens, f/2.8, depth of field",
-        "neg": "fisheye, extreme close-up"
+        "neg": "fisheye, extreme close-up, noise, grain, grainy"
     },
     # ----------------------------------
     "Infinito": {
         "pos": "24mm lens, f/8, sharp focus",
-        "neg": "bokeh, blur, macro"
+        "neg": "bokeh, blur, macro, noise, grain, grainy"
     }
 }
 
