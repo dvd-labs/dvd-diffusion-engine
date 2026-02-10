@@ -1,17 +1,4 @@
 import re
-# --- 2. FUNCIONES DE SOPORTE ---
-def parse_manual_string(s_str, default_steps, default_cfg, default_seed):
-    p_steps, p_cfg, p_seed = default_steps, default_cfg, default_seed
-    if not s_str: return p_steps, p_cfg, p_seed
-    try:
-        steps_match = re.search(r'(?:Steps|steps)[:=]\s*(\d+)', s_str)
-        if steps_match: p_steps = int(steps_match.group(1))
-        cfg_match = re.search(r'(?:CFG scale|cfg)[:=]\s*([\d\.]+)', s_str)
-        if cfg_match: p_cfg = float(cfg_match.group(1))
-        seed_match = re.search(r'(?:Seed|seed)[:=]\s*(\d+)', s_str)
-        if seed_match: p_seed = int(seed_match.group(1))
-    except: pass
-    return p_steps, p_cfg, p_seed
 
 def get_gender_term(sex, age):
     # Aseguramos que sea entero por si acaso
@@ -36,3 +23,22 @@ def get_gender_term(sex, age):
         if age < 30: return "young woman"
         if age < 60: return "middle-aged woman"
         return "elderly woman"
+
+def parse_manual_string(settings_str, default_steps, default_cfg, default_seed):
+    steps = default_steps
+    cfg = default_cfg
+    seed = default_seed
+    
+    if "steps=" in settings_str:
+        try: steps = int(re.search(r'steps=(\d+)', settings_str).group(1))
+        except: pass
+        
+    if "cfg=" in settings_str:
+        try: cfg = float(re.search(r'cfg=([\d\.]+)', settings_str).group(1))
+        except: pass
+        
+    if "seed=" in settings_str:
+        try: seed = int(re.search(r'seed=(\d+)', settings_str).group(1))
+        except: pass
+        
+    return steps, cfg, seed
