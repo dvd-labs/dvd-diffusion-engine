@@ -1,12 +1,22 @@
 # dna_data.py - v44.0: Sincronizado con Checkboxes
 
-# 1. ETNIAS
+# 1. ETNIAS (Estructura Ósea + Tono de Piel)
 ETHNICITY_DNA = {
-    "Nordico": "Scandinavian",
-    "Latino": "Latina" if "Female" in globals().get('SEXO', '') else "Latino", 
-    "Afro": "African American",
-    "Asiatico": "Japanese",
-    "Mediterraneo": "Italian"
+    # PÁLIDO / BLANCO
+    "Nordico": "pale skin Scandinavian",       # Piel muy blanca, pelo claro
+    "Blanco_USA": "fair skin American",        # Blanco genérico occidental
+    
+    # MEDIO / TRIGUEÑO
+    "Mediterraneo": "olive skin Italian",      # Piel aceitunada (ni muy blanco ni moreno)
+    "Asiatico": "fair skin Japanese",          # Piel clara asiática
+    
+    # MORENO / LATINO
+    "Latino": "tan skin Hispanic",             # Moreno clásico (lo que buscas)
+    "Arabe": "brown skin Middle Eastern",      # Moreno tipo medio oriente
+    
+    # NEGRO / OSCURO
+    "Afro": "dark skin African American",      # Piel oscura, rasgos afro
+    "Ebano": "very dark skin Sudanese"         # Piel negra profunda (muy estético)
 }
 
 # 2. COMPLEXIÓN (Español)
