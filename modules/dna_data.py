@@ -85,11 +85,15 @@ HABITATS = {
 
 # 8. CLIMA
 CLIMATES = {
-    "Soleado": "hard sun",
-    "Nublado": "overcast",
-    "Lluvia": "rainy",
-    "Noche": "night time",
-    "Atardecer": "golden hour"
+    "Soleado": "golden hour sunlight, warm lighting, clear sky",
+    "Nublado": "overcast sky, flat diffused lighting",
+    "Lluvia": "rainy day, wet surfaces, reflections, dramatic sky",
+    
+    # --- CAMBIO AQUÍ: Dividimos la noche ---
+    "Noche_Luna": "night time, moonlight, clear dark sky",  # Noche visible (la que tienes ahora)
+    "Noche_Profunda": "deep pitch black night, low key lighting, dimly lit, heavy shadows, intense atmosphere", # Noche oscura real
+    
+    "Atardecer": "sunset lighting, orange and purple sky, silhouettes"
 }
 
 # 9. MODOS DE CÁMARA
