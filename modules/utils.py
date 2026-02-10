@@ -13,12 +13,9 @@ def parse_manual_string(s_str, default_steps, default_cfg, default_seed):
     except: pass
     return p_steps, p_cfg, p_seed
 
-def get_gender_term(sex, age_str):
-    try:
-        # Extraemos el número (ej: "12-year-old" -> 12)
-        age = int(re.search(r'\d+', age_str).group())
-    except:
-        age = 30 # Default de seguridad
+def get_gender_term(sex, age):
+    # Aseguramos que sea entero por si acaso
+    age = int(age)
 
     # --- LÓGICA MASCULINA ---
     if sex == "Male":
