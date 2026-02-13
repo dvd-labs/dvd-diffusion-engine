@@ -118,7 +118,7 @@ CAMERA_MODES = {
 RESOLUTIONS = {
     "Square (1024x1024)": (1024, 1024),
     "Cinematic_Landscape (1216x832)": (1216, 832),
-    "Cinematic_Landscape 1.5 MP (1482x1014)": (1482, 1014),
+    "Cinematic_Landscape 1.5 MP (1520x1040)": (1520, 1040),
     "Cinematic_Portrait (832x1216)": (832, 1216),
     "Wide_16:9 (1344x768)": (1344, 768),
     "Tall_9:16 (768x1344)": (768, 1344)
